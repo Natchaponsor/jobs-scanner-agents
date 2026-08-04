@@ -157,6 +157,28 @@ export const useJobsStore = create<JobsState>()(
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       },
+      // Sources are persisted wholesale, so a browser with existing state would otherwise
+      // never pick up companies added to DEFAULT_SOURCES later (e.g. Column/Google/Two
+      // Sigma/JPMorgan added after v1). Merge on load: sync each default source's config
+      // (identifier/adapterType/etc.) from code while preserving the user's enabled/disabled
+      // choice, add any new defaults that aren't in storage yet, and keep custom sources as-is.
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<JobsState> | undefined;
+        if (!persisted?.sources) return { ...currentState, ...persisted };
+
+        const persistedById = new Map(persisted.sources.map((s) => [s.id, s]));
+        const mergedDefaults = DEFAULT_SOURCES.map((def) => {
+          const existing = persistedById.get(def.id);
+          return existing ? { ...def, enabled: existing.enabled } : def;
+        });
+        const customSources = persisted.sources.filter((s) => !s.isDefault);
+
+        return {
+          ...currentState,
+          ...persisted,
+          sources: [...mergedDefaults, ...customSources],
+        };
+      },
     }
   )
 );
