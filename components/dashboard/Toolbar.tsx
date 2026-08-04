@@ -1,13 +1,10 @@
 "use client";
 
-import { Download } from "lucide-react";
 import { useJobsStore } from "@/store/useJobsStore";
 import { Segmented } from "@/components/ui/Segmented";
 import { Button } from "@/components/ui/Button";
-import { exportJobsToExcel } from "@/lib/excel";
-import type { Job } from "@/lib/types";
 
-export function Toolbar({ resultCount, visibleJobs }: { resultCount: number; visibleJobs: Job[] }) {
+export function Toolbar({ resultCount }: { resultCount: number }) {
   const { sortBy, setSortBy, savedOnly, setSavedOnly, appliedOnly, setAppliedOnly, perPage, setPerPage } =
     useJobsStore();
 
@@ -38,10 +35,6 @@ export function Toolbar({ resultCount, visibleJobs }: { resultCount: number; vis
           <option value={50}>50 / page</option>
           <option value={100}>100 / page</option>
         </select>
-        <Button variant="secondary" size="sm" onClick={() => exportJobsToExcel(visibleJobs)}>
-          <Download className="h-3.5 w-3.5" />
-          Export
-        </Button>
       </div>
     </div>
   );

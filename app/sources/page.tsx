@@ -1,57 +1,70 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { useJobsStore } from "@/store/useJobsStore";
 import { Card, CardTitle, CardSubtitle, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
-import type { ScanSource } from "@/lib/types";
+import { WORKING_ADAPTER_TYPES } from "@/lib/types";
+import type { ScanSource, SourceGroup } from "@/lib/types";
+
+const GROUP_ORDER: SourceGroup[] = ["Mag 7", "Financial Services", "AI", "Media and Entertainment", "E-Commerce", "Etc"];
+
+function isWorking(source: ScanSource) {
+  return WORKING_ADAPTER_TYPES.includes(source.adapterType);
+}
+
+function Toggle({ on, disabled, onClick, label }: { on: boolean; disabled?: boolean; onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+        on ? "bg-accent" : "bg-panel"
+      )}
+    >
+      <span
+        className={cn(
+          "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
+          on ? "translate-x-5" : "translate-x-0.5"
+        )}
+      />
+    </button>
+  );
+}
 
 function SourceRow({ source }: { source: ScanSource }) {
   const { toggleSource, removeSource } = useJobsStore();
-  const isWorking = ["greenhouse", "workday", "eightfold", "ashby", "oracle-fusion", "html-scrape", "custom-amazon"].includes(
-    source.adapterType
-  );
+  const working = isWorking(source);
 
   return (
     <div className="flex items-center justify-between gap-3 border-b border-border py-3 last:border-0">
-      <div>
-        <div className="flex items-center gap-2">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="font-medium text-fg">{source.name}</span>
-          {isWorking ? (
-            <Badge tone="new">adapter ready</Badge>
-          ) : (
-            <Badge tone="warn">not yet supported</Badge>
-          )}
+          {working ? <Badge tone="new">adapter ready</Badge> : <Badge tone="warn">not yet supported</Badge>}
         </div>
-        <p className="text-xs text-fg-subtle">{source.identifier}</p>
+        <p className="truncate text-xs text-fg-subtle">{source.identifier}</p>
       </div>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={source.enabled}
+      <div className="flex shrink-0 items-center gap-2">
+        <Toggle
+          on={source.enabled}
+          disabled={!working}
           onClick={() => toggleSource(source.id)}
-          disabled={!isWorking}
-          className={cn(
-            "relative h-6 w-11 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40",
-            source.enabled ? "bg-accent" : "bg-panel"
-          )}
-        >
-          <span
-            className={cn(
-              "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
-              source.enabled ? "translate-x-5" : "translate-x-0.5"
-            )}
-          />
-        </button>
+          label={`${source.enabled ? "Disable" : "Enable"} ${source.name}`}
+        />
         {!source.isDefault && (
           <button
             type="button"
             onClick={() => removeSource(source.id)}
-            className="text-fg-subtle hover:text-loss"
+            className="shrink-0 text-fg-subtle hover:text-loss"
             aria-label="Remove source"
           >
             <Trash2 className="h-4 w-4" />
@@ -59,6 +72,41 @@ function SourceRow({ source }: { source: ScanSource }) {
         )}
       </div>
     </div>
+  );
+}
+
+function GroupSection({ group, sources }: { group: SourceGroup; sources: ScanSource[] }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const { setGroupEnabled } = useJobsStore();
+  const working = sources.filter(isWorking);
+  const onCount = working.filter((s) => s.enabled).length;
+  const allOn = working.length > 0 && onCount === working.length;
+
+  return (
+    <Card>
+      <CardHeader>
+        <button
+          type="button"
+          onClick={() => setCollapsed((v) => !v)}
+          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+        >
+          {collapsed ? <ChevronDown className="h-4 w-4 shrink-0 text-fg-subtle" /> : <ChevronUp className="h-4 w-4 shrink-0 text-fg-subtle" />}
+          <div className="min-w-0">
+            <CardTitle>{group}</CardTitle>
+            <CardSubtitle>
+              {working.length > 0 ? `${onCount}/${working.length} on` : "No working adapters yet"}
+            </CardSubtitle>
+          </div>
+        </button>
+        <Toggle
+          on={allOn}
+          disabled={working.length === 0}
+          onClick={() => setGroupEnabled(group, !allOn)}
+          label={`${allOn ? "Disable" : "Enable"} all ${group} sources`}
+        />
+      </CardHeader>
+      {!collapsed && sources.map((s) => <SourceRow key={s.id} source={s} />)}
+    </Card>
   );
 }
 
@@ -71,6 +119,8 @@ export default function SourcesPage() {
 
   const social = sources.filter((s) => s.category === "social");
   const company = sources.filter((s) => s.category === "company");
+  const defaultCompany = company.filter((s) => s.isDefault);
+  const customCompany = company.filter((s) => !s.isDefault);
 
   return (
     <div className="space-y-4">
@@ -78,7 +128,8 @@ export default function SourcesPage() {
         <h1 className="font-serif text-2xl font-semibold tracking-tight text-fg">Scan sources</h1>
         <p className="text-sm text-fg-muted">
           Choose what the scanner looks at. Sources marked &ldquo;not yet supported&rdquo; are custom career
-          sites that need a per-company scraper — toggling stays off until one is wired up.
+          sites that need a per-company scraper — toggling stays off until one is wired up. Company sites are
+          grouped by industry below, each with its own on/off-all toggle.
         </p>
       </div>
 
@@ -94,20 +145,22 @@ export default function SourcesPage() {
         ))}
       </Card>
 
-      <Card>
-        <CardHeader>
-          <div>
-            <CardTitle>Company career sites</CardTitle>
-            <CardSubtitle>
-              Greenhouse, Workday, Ashby, Oracle Fusion, Amazon, and two server-rendered sites
-              (Google, Two Sigma) are ready to scan today.
-            </CardSubtitle>
-          </div>
-        </CardHeader>
-        {company.map((s) => (
-          <SourceRow key={s.id} source={s} />
-        ))}
-      </Card>
+      {GROUP_ORDER.map((group) => {
+        const groupSources = defaultCompany.filter((s) => s.group === group);
+        if (groupSources.length === 0) return null;
+        return <GroupSection key={group} group={group} sources={groupSources} />;
+      })}
+
+      {customCompany.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Custom sources</CardTitle>
+          </CardHeader>
+          {customCompany.map((s) => (
+            <SourceRow key={s.id} source={s} />
+          ))}
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

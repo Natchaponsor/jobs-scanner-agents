@@ -99,7 +99,7 @@ export default function DashboardPage() {
       </div>
 
       <FiltersBar />
-      <Toolbar resultCount={filtered.length} visibleJobs={filtered} />
+      <Toolbar resultCount={filtered.length} />
       <JobsTable jobs={pageJobs} startIndex={(currentPage - 1) * perPage} />
 
       {pageCount > 1 && (

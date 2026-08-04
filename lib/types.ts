@@ -24,6 +24,7 @@ export interface Job {
 
 export type AdapterType =
   | "greenhouse"
+  | "lever"
   | "workday"
   | "eightfold"
   | "ashby"
@@ -32,6 +33,31 @@ export type AdapterType =
   | "custom-amazon"
   | "playwright"
   | "unimplemented";
+
+/** Adapter types with real, working `fetch` logic — used to gate which toggles are
+ *  interactive and which sources a group's master toggle affects. */
+export const WORKING_ADAPTER_TYPES: AdapterType[] = [
+  "greenhouse",
+  "lever",
+  "workday",
+  "eightfold",
+  "ashby",
+  "oracle-fusion",
+  "html-scrape",
+  "custom-amazon",
+];
+
+/** Curated groupings for the /sources settings page (distinct from `industry`, which is
+ *  job-level metadata used by the dashboard's industry filter). Lets a company sit in a
+ *  named set like "Mag 7" regardless of its literal industry. `null` for social sources,
+ *  which aren't grouped. */
+export type SourceGroup =
+  | "Financial Services"
+  | "Media and Entertainment"
+  | "AI"
+  | "E-Commerce"
+  | "Mag 7"
+  | "Etc";
 
 export interface ScanSource {
   id: string;
@@ -43,6 +69,7 @@ export interface ScanSource {
   enabled: boolean;
   isDefault: boolean;
   industry: string;
+  group: SourceGroup | null;
 }
 
 export interface ScanRun {

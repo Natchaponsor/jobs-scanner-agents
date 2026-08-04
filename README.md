@@ -20,10 +20,11 @@ are intentionally unimplemented rather than faked.
 
 | Company | Adapter | Status |
 |---|---|---|
-| Airbnb, SoFi | Greenhouse | ✅ working |
+| Airbnb, SoFi, Stripe, Adyen, Chime, Binance, Robinhood, Anthropic | Greenhouse | ✅ working |
+| Spotify | Lever | ✅ working |
+| Column, Air Wallex, Ramp, OpenAI, Handshake (their own careers, not the platform), Mercor | Ashby | ✅ working |
 | Adobe, Capital One | Workday | ✅ working |
 | Amazon / AWS | Amazon's own API | ✅ working |
-| Column | Ashby | ✅ working |
 | JPMorgan | Oracle Fusion Recruiting Cloud's public REST API | ✅ working |
 | Google, Two Sigma | Server-rendered HTML, parsed with `cheerio` (no browser needed — confirmed via plain `curl`) | ✅ working |
 | Netflix | Eightfold | ⚠️ adapter present, disabled by default — endpoint returned a bot-protection page during testing |
@@ -31,8 +32,11 @@ are intentionally unimplemented rather than faked.
 | Amex | — | Client-rendered *and* its data API is proxied through randomized, rotating paths — classic PerimeterX-style obfuscation. Not building around that. |
 | Microsoft | — | Its search API stalls mid-TLS-handshake for non-browser clients — TLS-fingerprint-based bot blocking. Not building around that either. |
 | Agoda, Citadel | — | Both return a Cloudflare "Just a moment…" JS challenge to non-browser requests. Same line as LinkedIn/Glassdoor: not building a bypass. |
+| Bank of America, Cisco, Uber, NVIDIA, Apple, Intuit, HSBC, Goldman Sachs, Meta, Blackrock, PayPal, Visa, ServiceNow, Expedia, eBay, X/Twitter, Tesla | — | Not yet identified — quick-probed (SSR check, common Workday/Eightfold guesses) rather than deep-dived one at a time. Likely a mix of custom SPAs and platforms not yet discovered. |
 
-Toggle sources and add custom companies at `/sources`.
+Toggle sources and add custom companies at `/sources` — company sites are grouped by
+industry (Financial Services, Media and Entertainment, AI, E-Commerce, Mag 7, Etc), each
+group with its own on/off-all toggle.
 
 ## Getting started
 

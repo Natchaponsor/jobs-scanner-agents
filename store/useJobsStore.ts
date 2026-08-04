@@ -4,7 +4,8 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { DEFAULT_FILTERS } from "@/lib/filters";
 import { DEFAULT_SOURCES } from "@/lib/defaultSources";
-import type { Filters, Job, ScanRun, ScanSource } from "@/lib/types";
+import { WORKING_ADAPTER_TYPES } from "@/lib/types";
+import type { Filters, Job, ScanRun, ScanSource, SourceGroup } from "@/lib/types";
 
 export type SortBy = "newest" | "company";
 
@@ -30,6 +31,7 @@ interface JobsState {
   setPerPage: (v: 20 | 50 | 100) => void;
 
   toggleSource: (id: string) => void;
+  setGroupEnabled: (group: SourceGroup, enabled: boolean) => void;
   addCustomSource: (name: string, url: string) => void;
   removeSource: (id: string) => void;
 
@@ -68,6 +70,13 @@ export const useJobsStore = create<JobsState>()(
           sources: state.sources.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)),
         })),
 
+      setGroupEnabled: (group, enabled) =>
+        set((state) => ({
+          sources: state.sources.map((s) =>
+            s.group === group && WORKING_ADAPTER_TYPES.includes(s.adapterType) ? { ...s, enabled } : s
+          ),
+        })),
+
       addCustomSource: (name, url) =>
         set((state) => ({
           sources: [
@@ -81,6 +90,7 @@ export const useJobsStore = create<JobsState>()(
               enabled: false,
               isDefault: false,
               industry: "any",
+              group: null,
             },
           ],
         })),
