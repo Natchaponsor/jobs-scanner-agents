@@ -11,7 +11,9 @@ import type { ScanSource } from "@/lib/types";
 
 function SourceRow({ source }: { source: ScanSource }) {
   const { toggleSource, removeSource } = useJobsStore();
-  const isWorking = ["greenhouse", "workday", "eightfold", "custom-amazon"].includes(source.adapterType);
+  const isWorking = ["greenhouse", "workday", "eightfold", "ashby", "oracle-fusion", "html-scrape", "custom-amazon"].includes(
+    source.adapterType
+  );
 
   return (
     <div className="flex items-center justify-between gap-3 border-b border-border py-3 last:border-0">
@@ -96,7 +98,10 @@ export default function SourcesPage() {
         <CardHeader>
           <div>
             <CardTitle>Company career sites</CardTitle>
-            <CardSubtitle>Greenhouse, Workday, and Amazon&apos;s own API are ready to scan today.</CardSubtitle>
+            <CardSubtitle>
+              Greenhouse, Workday, Ashby, Oracle Fusion, Amazon, and two server-rendered sites
+              (Google, Two Sigma) are ready to scan today.
+            </CardSubtitle>
           </div>
         </CardHeader>
         {company.map((s) => (

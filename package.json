@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "cheerio": "^1.2.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "exceljs": "^4.4.0",

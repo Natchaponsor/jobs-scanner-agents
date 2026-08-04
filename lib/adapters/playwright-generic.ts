@@ -1,12 +1,15 @@
 import type { Adapter } from "./types";
 
 /**
- * Scaffold for custom career sites without a public JSON API (Google, Microsoft, TikTok,
- * Agoda, JPMorgan, Amex, Two Sigma, Citadel, Column). Not implemented in v1 — these sites
- * need per-company Playwright scripts (install with `npx playwright install chromium`,
- * then extend this adapter with real page.goto/selector logic per source.identifier).
+ * Scaffold for career sites that are genuinely client-rendered with no server-side content
+ * and no discoverable API (currently: TikTok/lifeattiktok.com). Not a place to route sites
+ * that are actively bot-mitigated (Cloudflare challenges, obfuscated/rotating API paths,
+ * TLS-fingerprint blocking) — those stay `unimplemented` on principle, not because a browser
+ * would technically get past them. See README's coverage table for the current breakdown.
  *
- * Left as a clear "not yet supported" no-op rather than a fake/broken scraper.
+ * Not implemented in v1 — needs `npx playwright install chromium`, then real
+ * page.goto/selector logic per source.identifier. Left as a clear "not yet supported" no-op
+ * rather than a fake/broken scraper.
  */
 export const playwrightGenericAdapter: Adapter = {
   async fetch(source) {

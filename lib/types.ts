@@ -26,6 +26,9 @@ export type AdapterType =
   | "greenhouse"
   | "workday"
   | "eightfold"
+  | "ashby"
+  | "oracle-fusion"
+  | "html-scrape"
   | "custom-amazon"
   | "playwright"
   | "unimplemented";

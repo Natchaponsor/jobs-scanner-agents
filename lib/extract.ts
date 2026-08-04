@@ -10,6 +10,9 @@ export interface RawJob {
   description: string;
   workMode?: WorkMode;
   jobType?: JobType;
+  /** Set when the source exposes an explicit seniority tag (e.g. Google's "Mid"/"Senior"
+   *  labels) — takes priority over the regex-based guess, which stays generic/global. */
+  yearsExperience?: YoeBucket;
 }
 
 export const FUNCTION_LABELS = [
@@ -137,7 +140,7 @@ export function normalize(raw: RawJob, source: ScanSource): Job {
     locationCountry: country,
     locationState: state,
     locationCity: city,
-    yearsExperience: extractYearsExperience(text),
+    yearsExperience: raw.yearsExperience ?? extractYearsExperience(text),
     jobType: raw.jobType ?? extractJobType(raw.title),
     workMode: raw.workMode ?? extractWorkMode(text),
     industry: source.industry,
