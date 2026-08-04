@@ -32,7 +32,9 @@ are intentionally unimplemented rather than faked.
 | Amex | — | Client-rendered *and* its data API is proxied through randomized, rotating paths — classic PerimeterX-style obfuscation. Not building around that. |
 | Microsoft | — | Its search API stalls mid-TLS-handshake for non-browser clients — TLS-fingerprint-based bot blocking. Not building around that either. |
 | Agoda, Citadel | — | Both return a Cloudflare "Just a moment…" JS challenge to non-browser requests. Same line as LinkedIn/Glassdoor: not building a bypass. |
-| Bank of America, Cisco, Uber, NVIDIA, Apple, Intuit, HSBC, Goldman Sachs, Meta, Blackrock, PayPal, Visa, ServiceNow, Expedia, eBay, X/Twitter, Tesla | — | Not yet identified — quick-probed (SSR check, common Workday/Eightfold guesses) rather than deep-dived one at a time. Likely a mix of custom SPAs and platforms not yet discovered. |
+| Tesla | — | Found the real endpoint (`tesla.com/cua-api/apps/careers/state`) by watching network traffic in a real browser — renders fine there. Hitting it directly gets Akamai Bot Manager's "Access Denied" page. Same enforcement category as Agoda/Citadel/Microsoft, different vendor. |
+| Meta | — | Not bot-blocked, but `metacareers.com` runs on Facebook's internal "Comet" GraphQL framework — job data only loads via `POST /graphql` calls carrying session tokens generated after full JS boot. Same category as TikTok: genuinely needs a real browser, not evasion. |
+| Bank of America, Cisco, Uber, NVIDIA, Apple, Intuit, HSBC, Goldman Sachs, Blackrock, PayPal, Visa, ServiceNow, Expedia, eBay, X/Twitter | — | Not yet identified — quick-probed (SSR check, common Workday/Eightfold guesses) rather than deep-dived one at a time. Likely a mix of custom SPAs and platforms not yet discovered. |
 
 Toggle sources and add custom companies at `/sources` — company sites are grouped by
 industry (Financial Services, Media and Entertainment, AI, E-Commerce, Mag 7, Etc), each
