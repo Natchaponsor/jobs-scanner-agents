@@ -1,0 +1,163 @@
+"use client";
+
+import { useState } from "react";
+import { ChevronDown, ChevronUp, Search } from "lucide-react";
+import { useJobsStore } from "@/store/useJobsStore";
+import { FUNCTION_LABELS } from "@/lib/extract";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import type { YoeBucket, JobType, WorkMode } from "@/lib/types";
+
+const YOE_OPTIONS: { label: string; value: YoeBucket | "any" }[] = [
+  { label: "Any", value: "any" },
+  { label: "0-3 yrs", value: "0-3" },
+  { label: "3-5 yrs", value: "3-5" },
+  { label: "5-10 yrs", value: "5-10" },
+  { label: "10+ yrs", value: "10+" },
+];
+
+const JOB_TYPE_OPTIONS: { label: string; value: JobType | "any" }[] = [
+  { label: "Any", value: "any" },
+  { label: "Full-time", value: "FT" },
+  { label: "Part-time", value: "PT" },
+  { label: "Internship", value: "Internship" },
+];
+
+const WORK_MODE_OPTIONS: { label: string; value: WorkMode | "any" }[] = [
+  { label: "Any", value: "any" },
+  { label: "In-person", value: "in-person" },
+  { label: "Hybrid", value: "hybrid" },
+  { label: "Remote", value: "remote" },
+];
+
+function fieldClass() {
+  return "h-10 w-full rounded-lg border border-border bg-white px-3 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-accent";
+}
+
+export function FiltersBar() {
+  const [showMore, setShowMore] = useState(false);
+  const { filters, sources, setFilters } = useJobsStore();
+  const industries = Array.from(new Set(sources.map((s) => s.industry).filter((i) => i !== "any"))).sort();
+
+  return (
+    <Card className="mb-4">
+      <div className="relative mb-4">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
+        <input
+          value={filters.search}
+          onChange={(e) => setFilters({ search: e.target.value })}
+          placeholder="Search by company or role"
+          className={`${fieldClass()} pl-9`}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div>
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-fg-subtle">Location</label>
+          <div className="flex gap-2">
+            <select
+              value={filters.locationCountry}
+              onChange={(e) => setFilters({ locationCountry: e.target.value })}
+              className={fieldClass()}
+            >
+              <option value="any">Any country</option>
+              <option value="United States">United States</option>
+            </select>
+            <input
+              value={filters.locationCity}
+              onChange={(e) => setFilters({ locationCity: e.target.value })}
+              placeholder="City or state"
+              className={fieldClass()}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-fg-subtle">Function</label>
+          <select
+            value={filters.function}
+            onChange={(e) => setFilters({ function: e.target.value })}
+            className={fieldClass()}
+          >
+            <option value="any">Any function</option>
+            {FUNCTION_LABELS.map((f) => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-fg-subtle">
+            Years of experience
+          </label>
+          <select
+            value={filters.yearsExperience}
+            onChange={(e) => setFilters({ yearsExperience: e.target.value as YoeBucket | "any" })}
+            className={fieldClass()}
+          >
+            {YOE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <Button variant="ghost" size="sm" className="mt-3" onClick={() => setShowMore((v) => !v)}>
+        More filters
+        {showMore ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+      </Button>
+
+      {showMore && (
+        <div className="mt-3 grid grid-cols-1 gap-3 border-t border-border pt-3 sm:grid-cols-3">
+          <div>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-fg-subtle">Job type</label>
+            <select
+              value={filters.jobType}
+              onChange={(e) => setFilters({ jobType: e.target.value as JobType | "any" })}
+              className={fieldClass()}
+            >
+              {JOB_TYPE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-fg-subtle">Work mode</label>
+            <select
+              value={filters.workMode}
+              onChange={(e) => setFilters({ workMode: e.target.value as WorkMode | "any" })}
+              className={fieldClass()}
+            >
+              {WORK_MODE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-fg-subtle">Industry</label>
+            <select
+              value={filters.industry}
+              onChange={(e) => setFilters({ industry: e.target.value })}
+              className={fieldClass()}
+            >
+              <option value="any">Any industry</option>
+              {industries.map((i) => (
+                <option key={i} value={i}>
+                  {i}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}

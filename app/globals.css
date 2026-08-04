@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #f7f8fb;
+  --color-card: #ffffff;
+  --color-panel: #eef1f8;
+  --color-border: #dde3ef;
+  --color-fg: #1a2b4c;
+  --color-fg-muted: #5b6b8c;
+  --color-fg-subtle: #8993ab;
+  --color-accent: #5b7fdb;
+  --color-accent-strong: #3956b8;
+  --color-accent-tint: #eaf0fe;
+  --color-gain: #2f9e63;
+  --color-loss: #d0574a;
+
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-feature-settings: "tnum" 1, "lnum" 1;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: #ffffff;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
