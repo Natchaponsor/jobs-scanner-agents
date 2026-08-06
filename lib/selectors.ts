@@ -1,3 +1,4 @@
+import { matchesCountryFilter, cityMatchesQuery } from "./locations";
 import type { Filters, Job } from "./types";
 import type { SortBy } from "@/store/useJobsStore";
 
@@ -12,14 +13,11 @@ export function filterAndSortJobs(
     if (opts.savedOnly && !job.saved) return false;
     if (opts.appliedOnly && !job.applied) return false;
 
-    if (filters.locationCountry !== "any" && job.locationCountry !== "not-specified") {
-      if (job.locationCountry !== filters.locationCountry) return false;
-    }
-    const cityQuery = filters.locationCity.trim().toLowerCase();
-    if (cityQuery && job.locationCity !== "not-specified") {
-      const haystack = `${job.locationCity} ${job.locationState}`.toLowerCase();
-      if (!haystack.includes(cityQuery)) return false;
-    }
+    // Once a specific country/city is picked, it's authoritative — a job with an unknown
+    // location no longer passes through by default (that silent pass-through was why the
+    // filter used to look like it did nothing: most postings couldn't be classified).
+    if (!matchesCountryFilter(job.locationCountry, filters.locationCountry)) return false;
+    if (!cityMatchesQuery(job.locationCity, job.locationState, filters.locationCity)) return false;
     if (filters.function.trim() && filters.function !== "any") {
       if (job.function.toLowerCase() !== filters.function.trim().toLowerCase()) return false;
     }

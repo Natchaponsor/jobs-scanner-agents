@@ -11,6 +11,9 @@ export interface Job {
   locationCountry: string;
   locationState: string;
   locationCity: string;
+  /** Original, unparsed location text from the source — used as a display fallback when
+   *  the string was too messy (multi-location lists, ATS codes) to parse a clean city. */
+  locationRaw: string;
   yearsExperience: YoeBucket;
   jobType: JobType;
   workMode: WorkMode;

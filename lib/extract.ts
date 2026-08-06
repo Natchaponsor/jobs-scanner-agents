@@ -1,3 +1,4 @@
+import { classifyLocation } from "./locations";
 import type { Job, JobType, ScanSource, WorkMode, YoeBucket } from "./types";
 
 /** What an adapter hands back before normalization. Fields it can't determine are left undefined
@@ -98,38 +99,8 @@ export function extractJobType(title: string): JobType {
   return "FT";
 }
 
-const US_STATES: Record<string, string> = {
-  AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California",
-  CO: "Colorado", CT: "Connecticut", DE: "Delaware", FL: "Florida", GA: "Georgia",
-  HI: "Hawaii", ID: "Idaho", IL: "Illinois", IN: "Indiana", IA: "Iowa",
-  KS: "Kansas", KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland",
-  MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi", MO: "Missouri",
-  MT: "Montana", NE: "Nebraska", NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey",
-  NM: "New Mexico", NY: "New York", NC: "North Carolina", ND: "North Dakota", OH: "Ohio",
-  OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island", SC: "South Carolina",
-  SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont",
-  VA: "Virginia", WA: "Washington", WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming",
-  DC: "District of Columbia",
-};
-
-export function parseLocation(raw: string): { country: string; state: string; city: string } {
-  const cleaned = raw.trim();
-  if (!cleaned) return { country: "not-specified", state: "", city: "not-specified" };
-  const parts = cleaned.split(",").map((p) => p.trim());
-  if (parts.length === 1) return { country: "not-specified", state: "", city: parts[0] };
-  const last = parts[parts.length - 1];
-  const stateCandidate = parts.length >= 2 ? parts[parts.length - 2] : "";
-  const stateName = US_STATES[stateCandidate.toUpperCase()] ?? (Object.values(US_STATES).includes(stateCandidate) ? stateCandidate : "");
-  const isUsState = /^[A-Z]{2}$/.test(last) || /united states|usa/i.test(last) || stateName !== "";
-  return {
-    country: isUsState ? "United States" : last,
-    state: stateName,
-    city: parts[0],
-  };
-}
-
 export function normalize(raw: RawJob, source: ScanSource): Job {
-  const { country, state, city } = parseLocation(raw.location);
+  const { country, state, city } = classifyLocation(raw.location);
   const text = `${raw.title} ${raw.description}`;
   return {
     id: `${source.name}::${raw.url}`,
@@ -140,6 +111,7 @@ export function normalize(raw: RawJob, source: ScanSource): Job {
     locationCountry: country,
     locationState: state,
     locationCity: city,
+    locationRaw: raw.location.trim(),
     yearsExperience: raw.yearsExperience ?? extractYearsExperience(text),
     jobType: raw.jobType ?? extractJobType(raw.title),
     workMode: raw.workMode ?? extractWorkMode(text),

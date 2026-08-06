@@ -4,8 +4,10 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import { useJobsStore } from "@/store/useJobsStore";
 import { FUNCTION_LABELS } from "@/lib/extract";
+import { COUNTRY_FILTER_OPTIONS, SUGGESTED_CITIES } from "@/lib/locations";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/cn";
 import type { YoeBucket, JobType, WorkMode } from "@/lib/types";
 
 const YOE_OPTIONS: { label: string; value: YoeBucket | "any" }[] = [
@@ -57,11 +59,14 @@ export function FiltersBar() {
           <div className="flex gap-2">
             <select
               value={filters.locationCountry}
-              onChange={(e) => setFilters({ locationCountry: e.target.value })}
+              onChange={(e) => setFilters({ locationCountry: e.target.value, locationCity: "" })}
               className={fieldClass()}
             >
-              <option value="any">Any country</option>
-              <option value="United States">United States</option>
+              {COUNTRY_FILTER_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
             </select>
             <input
               value={filters.locationCity}
@@ -70,6 +75,25 @@ export function FiltersBar() {
               className={fieldClass()}
             />
           </div>
+          {SUGGESTED_CITIES[filters.locationCountry] && (
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {SUGGESTED_CITIES[filters.locationCountry].map((city) => (
+                <button
+                  key={city}
+                  type="button"
+                  onClick={() => setFilters({ locationCity: city })}
+                  className={cn(
+                    "rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
+                    filters.locationCity === city
+                      ? "border-accent bg-accent-tint text-accent-strong"
+                      : "border-border text-fg-muted hover:text-fg"
+                  )}
+                >
+                  {city}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>

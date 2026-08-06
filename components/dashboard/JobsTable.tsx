@@ -49,7 +49,9 @@ export function JobsTable({ jobs, startIndex }: { jobs: Job[]; startIndex: numbe
               <td className="px-4 py-4 align-top text-fg-muted">
                 {job.locationCity !== "not-specified"
                   ? [job.locationCity, job.locationState].filter(Boolean).join(", ")
-                  : job.locationCountry}
+                  : job.locationCountry !== "not-specified"
+                    ? job.locationCountry
+                    : job.locationRaw || "Not specified"}
               </td>
               <td className="px-4 py-4 align-top">
                 <Badge tone={job.applied ? "new" : "neutral"}>{statusLabel(job)}</Badge>
