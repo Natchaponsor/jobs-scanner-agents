@@ -26,14 +26,16 @@ function Toggle({ on, disabled, onClick, label }: { on: boolean; disabled?: bool
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40",
-        on ? "bg-accent" : "bg-panel"
+        "relative h-6 w-11 shrink-0 rounded-full border transition-colors duration-200 ease-in-out",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
+        "disabled:cursor-not-allowed disabled:opacity-40",
+        on ? "border-accent bg-accent" : "border-border bg-panel"
       )}
     >
       <span
         className={cn(
-          "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
-          on ? "translate-x-5" : "translate-x-0.5"
+          "absolute top-0.5 left-0.5 h-4.5 w-4.5 rounded-full bg-white shadow-md ring-1 ring-black/10 transition-transform duration-200 ease-in-out",
+          on ? "translate-x-5" : "translate-x-0"
         )}
       />
     </button>
