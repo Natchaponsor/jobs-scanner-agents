@@ -10,7 +10,17 @@ import { cn } from "@/lib/cn";
 import { WORKING_ADAPTER_TYPES } from "@/lib/types";
 import type { ScanSource, SourceGroup } from "@/lib/types";
 
-const GROUP_ORDER: SourceGroup[] = ["Mag 7", "Financial Services", "AI", "Media and Entertainment", "E-Commerce", "Etc"];
+const GROUP_ORDER: SourceGroup[] = [
+  "Big Tech",
+  "Software",
+  "AI",
+  "Financial Services",
+  "Media and Entertainment",
+  "Social Media",
+  "Travel and Ride Share",
+  "E-Commerce",
+  "Etc",
+];
 
 function isWorking(source: ScanSource) {
   return WORKING_ADAPTER_TYPES.includes(source.adapterType);
@@ -130,8 +140,14 @@ export default function SourcesPage() {
         <h1 className="font-serif text-2xl font-semibold tracking-tight text-fg">Scan sources</h1>
         <p className="text-sm text-fg-muted">
           Choose what the scanner looks at. Sources marked &ldquo;not yet supported&rdquo; are custom career
-          sites that need a per-company scraper — toggling stays off until one is wired up. Company sites are
-          grouped by industry below, each with its own on/off-all toggle.
+          sites that need a per-company scraper — toggling stays off until one is wired up.
+        </p>
+      </div>
+
+      <div>
+        <h2 className="font-serif text-lg font-semibold tracking-tight text-fg">Social platforms</h2>
+        <p className="text-sm text-fg-muted">
+          Job boards, not individual companies — see README for why these aren&apos;t automated.
         </p>
       </div>
 
@@ -146,6 +162,14 @@ export default function SourcesPage() {
           <SourceRow key={s.id} source={s} />
         ))}
       </Card>
+
+      <div className="border-t border-border pt-4">
+        <h2 className="font-serif text-lg font-semibold tracking-tight text-fg">Career sites</h2>
+        <p className="text-sm text-fg-muted">
+          Individual companies&apos; own career pages, grouped by industry — each group has its own
+          on/off-all toggle.
+        </p>
+      </div>
 
       {GROUP_ORDER.map((group) => {
         const groupSources = defaultCompany.filter((s) => s.group === group);

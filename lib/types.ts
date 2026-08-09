@@ -52,14 +52,17 @@ export const WORKING_ADAPTER_TYPES: AdapterType[] = [
 
 /** Curated groupings for the /sources settings page (distinct from `industry`, which is
  *  job-level metadata used by the dashboard's industry filter). Lets a company sit in a
- *  named set like "Mag 7" regardless of its literal industry. `null` for social sources,
+ *  named set like "Big Tech" regardless of its literal industry. `null` for social sources,
  *  which aren't grouped. */
 export type SourceGroup =
   | "Financial Services"
   | "Media and Entertainment"
   | "AI"
   | "E-Commerce"
-  | "Mag 7"
+  | "Big Tech"
+  | "Travel and Ride Share"
+  | "Software"
+  | "Social Media"
   | "Etc";
 
 export interface ScanSource {
