@@ -8,19 +8,23 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { WORKING_ADAPTER_TYPES } from "@/lib/types";
-import type { ScanSource, SourceGroup } from "@/lib/types";
+import type { BigCategory, ScanSource, SourceGroup } from "@/lib/types";
 
-const GROUP_ORDER: SourceGroup[] = [
-  "Big Tech",
-  "Software",
-  "AI",
-  "Financial Services",
-  "Media and Entertainment",
-  "Social Media",
-  "Travel and Ride Share",
-  "E-Commerce",
-  "Etc",
-];
+const BIG_CATEGORY_ORDER: BigCategory[] = ["FinTech", "Tech"];
+
+const GROUPS_BY_BIG_CATEGORY: Record<BigCategory, SourceGroup[]> = {
+  FinTech: ["Banks & Traditional Finance", "Payments & FinTech", "Quant, Hedge Funds & Crypto"],
+  Tech: [
+    "Big Tech",
+    "Software",
+    "AI",
+    "E-Commerce",
+    "Media and Entertainment",
+    "Social Media",
+    "Travel and Ride Share",
+    "Etc",
+  ],
+};
 
 function isWorking(source: ScanSource) {
   return WORKING_ADAPTER_TYPES.includes(source.adapterType);
@@ -122,6 +126,41 @@ function GroupSection({ group, sources }: { group: SourceGroup; sources: ScanSou
   );
 }
 
+function BigCategorySection({ category, sourcesByGroup }: { category: BigCategory; sourcesByGroup: Map<SourceGroup, ScanSource[]> }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const groups = GROUPS_BY_BIG_CATEGORY[category].filter((g) => (sourcesByGroup.get(g)?.length ?? 0) > 0);
+  if (groups.length === 0) return null;
+
+  const allSources = groups.flatMap((g) => sourcesByGroup.get(g) ?? []);
+  const working = allSources.filter(isWorking);
+  const onCount = working.filter((s) => s.enabled).length;
+
+  return (
+    <div className="space-y-3">
+      <button
+        type="button"
+        onClick={() => setCollapsed((v) => !v)}
+        className="flex w-full items-center gap-2 border-t border-border pt-4 text-left"
+      >
+        {collapsed ? <ChevronDown className="h-4 w-4 shrink-0 text-fg-subtle" /> : <ChevronUp className="h-4 w-4 shrink-0 text-fg-subtle" />}
+        <div>
+          <h2 className="font-serif text-lg font-semibold tracking-tight text-fg">{category}</h2>
+          <p className="text-sm text-fg-muted">
+            {groups.length} subcategor{groups.length === 1 ? "y" : "ies"} · {onCount}/{working.length} sources on
+          </p>
+        </div>
+      </button>
+      {!collapsed && (
+        <div className="space-y-4 border-l-2 border-border pl-4">
+          {groups.map((group) => (
+            <GroupSection key={group} group={group} sources={sourcesByGroup.get(group) ?? []} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SourcesPage() {
   const { sources, addCustomSource, hasHydrated } = useJobsStore();
   const [name, setName] = useState("");
@@ -133,6 +172,11 @@ export default function SourcesPage() {
   const company = sources.filter((s) => s.category === "company");
   const defaultCompany = company.filter((s) => s.isDefault);
   const customCompany = company.filter((s) => !s.isDefault);
+  const sourcesByGroup = new Map<SourceGroup, ScanSource[]>();
+  for (const s of defaultCompany) {
+    if (!s.group) continue;
+    sourcesByGroup.set(s.group, [...(sourcesByGroup.get(s.group) ?? []), s]);
+  }
 
   return (
     <div className="space-y-4">
@@ -166,16 +210,14 @@ export default function SourcesPage() {
       <div className="border-t border-border pt-4">
         <h2 className="font-serif text-lg font-semibold tracking-tight text-fg">Career sites</h2>
         <p className="text-sm text-fg-muted">
-          Individual companies&apos; own career pages, grouped by industry — each group has its own
-          on/off-all toggle.
+          Individual companies&apos; own career pages, grouped by industry under two big categories —
+          each subcategory has its own on/off-all toggle.
         </p>
       </div>
 
-      {GROUP_ORDER.map((group) => {
-        const groupSources = defaultCompany.filter((s) => s.group === group);
-        if (groupSources.length === 0) return null;
-        return <GroupSection key={group} group={group} sources={groupSources} />;
-      })}
+      {BIG_CATEGORY_ORDER.map((category) => (
+        <BigCategorySection key={category} category={category} sourcesByGroup={sourcesByGroup} />
+      ))}
 
       {customCompany.length > 0 && (
         <Card>

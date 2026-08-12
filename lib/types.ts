@@ -53,9 +53,12 @@ export const WORKING_ADAPTER_TYPES: AdapterType[] = [
 /** Curated groupings for the /sources settings page (distinct from `industry`, which is
  *  job-level metadata used by the dashboard's industry filter). Lets a company sit in a
  *  named set like "Big Tech" regardless of its literal industry. `null` for social sources,
- *  which aren't grouped. */
+ *  which aren't grouped. Each group nests under one `BigCategory` — see
+ *  GROUPS_BY_BIG_CATEGORY in app/sources/page.tsx for that mapping. */
 export type SourceGroup =
-  | "Financial Services"
+  | "Banks & Traditional Finance"
+  | "Payments & FinTech"
+  | "Quant, Hedge Funds & Crypto"
   | "Media and Entertainment"
   | "AI"
   | "E-Commerce"
@@ -64,6 +67,9 @@ export type SourceGroup =
   | "Software"
   | "Social Media"
   | "Etc";
+
+/** Top-level umbrella shown on the /sources page above its groups. */
+export type BigCategory = "FinTech" | "Tech";
 
 export interface ScanSource {
   id: string;
