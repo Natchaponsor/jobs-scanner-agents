@@ -1,6 +1,7 @@
 import type { Adapter } from "../types";
 import { googleAdapter } from "./google";
 import { twoSigmaAdapter } from "./twosigma";
+import { linemanWongnaiAdapter } from "./linemanwongnai";
 
 /**
  * HTML structure isn't standardized like an ATS API, so each company gets its own parser.
@@ -9,6 +10,7 @@ import { twoSigmaAdapter } from "./twosigma";
 const HTML_SCRAPERS: Record<string, Adapter> = {
   "co-google": googleAdapter,
   "co-twosigma": twoSigmaAdapter,
+  "co-linemanwongnai": linemanWongnaiAdapter,
 };
 
 export const htmlScrapeAdapter: Adapter = {

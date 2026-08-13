@@ -34,6 +34,7 @@ export type AdapterType =
   | "oracle-fusion"
   | "html-scrape"
   | "custom-amazon"
+  | "custom-shopee"
   | "playwright"
   | "unimplemented";
 
@@ -48,6 +49,7 @@ export const WORKING_ADAPTER_TYPES: AdapterType[] = [
   "oracle-fusion",
   "html-scrape",
   "custom-amazon",
+  "custom-shopee",
 ];
 
 /** Curated groupings for the /sources settings page (distinct from `industry`, which is

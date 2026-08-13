@@ -49,6 +49,10 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // LinkedIn's own careers page (Greenhouse) — separate from the "LinkedIn" social source
   // above, which represents scanning LinkedIn-the-job-board-platform (not automatable).
   { id: "co-linkedin", category: "company", name: "LinkedIn", identifier: "linkedin", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Tech", group: "Social Media" },
+  // Sea Group's own recruiting API (ats.workatsea.com), scoped to Thailand — see lib/adapters/shopee.ts.
+  { id: "co-shopee", category: "company", name: "Shopee", identifier: "shopee", adapterType: "custom-shopee", enabled: true, isDefault: true, industry: "Tech", group: "E-Commerce" },
+  // careers.lmwn.com server-renders its listing — see lib/adapters/html/linemanwongnai.ts.
+  { id: "co-linemanwongnai", category: "company", name: "LINE MAN Wongnai", identifier: "co-linemanwongnai", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Tech", group: "Travel and Ride Share" },
 
   // Eightfold endpoint returns an HTML challenge/error page rather than JSON when probed
   // headlessly — likely bot-protected. Adapter is wired up but left disabled until confirmed.
@@ -90,6 +94,11 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // requests — same enforcement category as Agoda/Citadel.
   { id: "co-doordash", category: "company", name: "DoorDash", identifier: "https://careersatdoordash.com/job-search/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Tech", group: "Travel and Ride Share" },
   { id: "co-canva", category: "company", name: "Canva", identifier: "https://www.lifeatcanva.com/en/jobs/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Software", group: "Software" },
+  // Lazada: the real job-search backend (aidc-jobs.alibaba.com, Alibaba Group's shared
+  // international recruiting platform) loads Alibaba's "Baxia" anti-bot script and requires a
+  // getSecurityId token before the job API responds — active bot-mitigation, same policy as
+  // Agoda/Citadel/Microsoft/Tesla above.
+  { id: "co-lazada", category: "company", name: "Lazada", identifier: "https://www.lazada.com/en/careers/job-search/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Tech", group: "E-Commerce" },
   // Line (LY Corp): not bot-blocked, runs on Gatsby + a Strapi-backed API, but the real job
   // listing endpoint wasn't found in a quick pass (the page-data.json files that are directly
   // fetchable only contain footer/nav content, not the listings) — needs a proper look, not a
