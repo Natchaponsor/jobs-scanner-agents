@@ -71,6 +71,14 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "co-tiktok", category: "company", name: "TikTok and ByteDance", identifier: "https://lifeattiktok.com/search", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Tech", group: "Media and Entertainment" },
   { id: "co-agoda", category: "company", name: "Agoda", identifier: "https://careersatagoda.com/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Travel", group: "Travel and Ride Share" },
   { id: "co-citadel", category: "company", name: "Citadel", identifier: "https://www.citadel.com/careers/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
+  // More quant trading firms — added as placeholders, career sites not yet investigated.
+  { id: "co-janestreet", category: "company", name: "Jane Street", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
+  { id: "co-drw", category: "company", name: "DRW", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
+  { id: "co-jumptrading", category: "company", name: "Jump Trading", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
+  { id: "co-hudsonrivertrading", category: "company", name: "Hudson River Trading", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
+  { id: "co-optiver", category: "company", name: "Optiver", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
+  { id: "co-imc", category: "company", name: "IMC Trading", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
+  { id: "co-sig", category: "company", name: "Susquehanna International Group", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
   // Cisco: on Phenom People (cdn.phenompeople.com) — the same platform as eBay below. Its
   // /api/apply/v2/jobs endpoint is real and public, but every "org" tenant-id guess derived
   // from the CDN asset path ("CISCISGLOBAL") returns "Tenant not identified"; the correct
@@ -146,4 +154,17 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "co-kearney", category: "company", name: "Kearney", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Boutique Consulting" },
   { id: "co-lek", category: "company", name: "L.E.K. Consulting", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Boutique Consulting" },
   { id: "co-kpmg", category: "company", name: "KPMG", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Big 4 & Professional Services" },
+
+  // --- Private Equity: added as placeholders, career sites not yet investigated. Mix of major
+  // US firms and firms with a strong Southeast Asia presence.
+  { id: "co-lakeshorecapital", category: "company", name: "Lakeshore Capital", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
+  { id: "co-blackstone", category: "company", name: "Blackstone", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
+  { id: "co-kkr", category: "company", name: "KKR", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
+  { id: "co-carlylegroup", category: "company", name: "Carlyle Group", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
+  { id: "co-tpg", category: "company", name: "TPG", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
+  { id: "co-warburgpincus", category: "company", name: "Warburg Pincus", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
+  { id: "co-affinityequity", category: "company", name: "Affinity Equity Partners", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
+  { id: "co-northstargroup", category: "company", name: "Northstar Group", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
+  { id: "co-creador", category: "company", name: "Creador", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
+  { id: "co-naviscapital", category: "company", name: "Navis Capital Partners", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
 ];

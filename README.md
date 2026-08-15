@@ -28,13 +28,14 @@ open roles are a separate, working source — see the table below.)
   country codes, bare city names).
 - **Scan sources page** (`/sources`) — three separate cards: "Social platforms" (job boards,
   not automated — see below), "Career sites" (individual companies, nested under three big
-  categories: FinTech (Banks & Traditional Finance, Payments & FinTech, Quant/Hedge Funds &
-  Crypto), Tech (Big Tech, Software, AI, E-Commerce, Media and Entertainment, Social Media,
-  Travel and Ride Share, Etc), and Consulting (Management Consulting, Tech Consulting, Big 4 &
-  Professional Services, Boutique Consulting)), and "Additional company" (custom sources you've
-  added, plus the add-a-company form). Every collapsible section — Social media, each big
-  category, each subcategory — starts collapsed by default. Each subcategory has its own master
-  toggle to enable/disable every working source in it at once. Sources marked "not yet
+  categories: Finance (Banks & Traditional Finance, Payments & FinTech, Quant/Hedge Funds &
+  Crypto, Private Equity), Tech (Big Tech, Software, AI, E-Commerce, Media and Entertainment,
+  Social Media, Travel and Ride Share, Etc), and Consulting (Management Consulting, Tech
+  Consulting, Big 4 & Professional Services, Boutique Consulting)), and "Additional company"
+  (custom sources you've added, plus the add-a-company form). Every collapsible section —
+  Social media, each big category, each subcategory — starts collapsed by default. Each
+  subcategory has its own master toggle to enable/disable every working source in it at once.
+  Sources marked "not yet
   supported" stay off until a real adapter is confirmed for them.
 - **Export to Excel** — top nav, between Dashboard and Scan sources; exports whatever the
   current filters/sort are showing.
@@ -69,11 +70,15 @@ open roles are a separate, working source — see the table below.)
 | Goldman Sachs | — | Custom Next.js app ("Higher") with an Apollo/GraphQL client — confirmed via `__NEXT_DATA__`, whose `initialApolloState` ships empty. Not bot-blocked, just genuinely client-rendered. |
 | Uber, Apple | — | Uber's 406 is just strict Accept-header negotiation (not bot-blocking), but the real page is a client-only SPA with no discoverable API. Apple's "Workday" references are a false positive (internal HR copy, not its career site); it's a custom Next.js-shaped app with no server-rendered listing found. |
 
-33 of 65 default company sources are live and working; the rest are visible but disabled on
-`/sources` with the specific reason noted above rather than a generic "not yet supported." The
-10 consulting firms (McKinsey, Bain, BCG, Deloitte, Accenture, PwC, EY, Kearney, L.E.K.,
-KPMG) are placeholders only — added to the source list and grouped, but their career sites
-haven't been investigated yet, so they're not in the table below.
+33 of 82 default company sources are live and working; the rest are visible but disabled on
+`/sources` with the specific reason noted above rather than a generic "not yet supported." Three
+groups are placeholders only — added to the source list and grouped, but their career sites
+haven't been investigated yet, so they're not in the table below:
+- 10 consulting firms: McKinsey, Bain, BCG, Deloitte, Accenture, PwC, EY, Kearney, L.E.K., KPMG
+- 7 more quant trading firms: Jane Street, DRW, Jump Trading, Hudson River Trading, Optiver,
+  IMC Trading, Susquehanna International Group (SIG)
+- 10 private equity firms: Lakeshore Capital, Blackstone, KKR, Carlyle Group, TPG, Warburg
+  Pincus, Affinity Equity Partners, Northstar Group, Creador, Navis Capital Partners
 
 ## Getting started
 

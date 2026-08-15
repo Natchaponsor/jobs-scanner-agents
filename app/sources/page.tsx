@@ -10,10 +10,10 @@ import { cn } from "@/lib/cn";
 import { WORKING_ADAPTER_TYPES } from "@/lib/types";
 import type { BigCategory, ScanSource, SourceGroup } from "@/lib/types";
 
-const BIG_CATEGORY_ORDER: BigCategory[] = ["FinTech", "Tech", "Consulting"];
+const BIG_CATEGORY_ORDER: BigCategory[] = ["Finance", "Tech", "Consulting"];
 
 const GROUPS_BY_BIG_CATEGORY: Record<BigCategory, SourceGroup[]> = {
-  FinTech: ["Banks & Traditional Finance", "Payments & FinTech", "Quant, Hedge Funds & Crypto"],
+  Finance: ["Banks & Traditional Finance", "Payments & FinTech", "Quant, Hedge Funds & Crypto", "Private Equity"],
   Tech: [
     "Big Tech",
     "Software",
