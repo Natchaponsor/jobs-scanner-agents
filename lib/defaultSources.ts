@@ -49,6 +49,11 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // LinkedIn's own careers page (Greenhouse) — separate from the "LinkedIn" social source
   // above, which represents scanning LinkedIn-the-job-board-platform (not automatable).
   { id: "co-linkedin", category: "company", name: "LinkedIn", identifier: "linkedin", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Tech", group: "Social Media" },
+  { id: "co-expedia", category: "company", name: "Expedia", identifier: "expedia.wd108.myworkdayjobs.com|search", adapterType: "workday", enabled: true, isDefault: true, industry: "Travel", group: "Travel and Ride Share" },
+  { id: "co-nvidia", category: "company", name: "NVIDIA", identifier: "nvidia.wd5.myworkdayjobs.com|NVIDIAExternalCareerSite", adapterType: "workday", enabled: true, isDefault: true, industry: "Tech", group: "Big Tech" },
+  { id: "co-bofa", category: "company", name: "Bank of America", identifier: "ghr.wd1.myworkdayjobs.com|lateral-us", adapterType: "workday", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
+  { id: "co-intuit", category: "company", name: "Intuit", identifier: "co-intuit", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
+  { id: "co-blackrock", category: "company", name: "Blackrock", identifier: "co-blackrock", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
   // Sea Group's own recruiting API (ats.workatsea.com), scoped to Thailand — see lib/adapters/shopee.ts.
   { id: "co-shopee", category: "company", name: "Shopee", identifier: "shopee", adapterType: "custom-shopee", enabled: true, isDefault: true, industry: "Tech", group: "E-Commerce" },
   // careers.lmwn.com server-renders its listing — see lib/adapters/html/linemanwongnai.ts.
@@ -66,25 +71,45 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "co-tiktok", category: "company", name: "TikTok and ByteDance", identifier: "https://lifeattiktok.com/search", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Tech", group: "Media and Entertainment" },
   { id: "co-agoda", category: "company", name: "Agoda", identifier: "https://careersatagoda.com/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Travel", group: "Travel and Ride Share" },
   { id: "co-citadel", category: "company", name: "Citadel", identifier: "https://www.citadel.com/careers/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
-  { id: "co-bofa", category: "company", name: "Bank of America", identifier: "https://careers.bankofamerica.com/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
+  // Cisco: on Phenom People (cdn.phenompeople.com) — the same platform as eBay below. Its
+  // /api/apply/v2/jobs endpoint is real and public, but every "org" tenant-id guess derived
+  // from the CDN asset path ("CISCISGLOBAL") returns "Tenant not identified"; the correct
+  // param name/value wasn't found without capturing live network traffic against this
+  // specific tenant.
   { id: "co-cisco", category: "company", name: "Cisco", identifier: "https://jobs.cisco.com/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Tech", group: "Software" },
+  // Uber: the 406 on a bare curl is just strict Accept-header negotiation, not bot-blocking
+  // (adding `Accept: text/html` gets a normal 200) — but the resulting page is a client-only
+  // SPA with no job data or API endpoint discoverable in the static HTML.
   { id: "co-uber", category: "company", name: "Uber", identifier: "https://www.uber.com/us/en/careers/list/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Tech", group: "Travel and Ride Share" },
-  { id: "co-nvidia", category: "company", name: "NVIDIA", identifier: "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Tech", group: "Big Tech" },
+  // Apple: the "Workday" references in the page are just copy for Apple's internal HR profile
+  // ("This won't be reflected in your Workday profile") — a false positive, not a Workday
+  // career site. It's a Next.js-shaped custom app; no server-rendered listing or public API
+  // endpoint was found.
   { id: "co-apple", category: "company", name: "Apple", identifier: "https://jobs.apple.com/en-us/search", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Tech", group: "Big Tech" },
-  { id: "co-intuit", category: "company", name: "Intuit", identifier: "https://jobs.intuit.com/search-jobs", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
+  // HSBC: runs on Avature (`avature.wizard` config in the page) — a new ATS family for this
+  // project. The search page is a form/wizard shell; the actual results URL convention wasn't
+  // found without driving the wizard in a real browser.
   { id: "co-hsbc", category: "company", name: "HSBC", identifier: "https://mycareer.hsbc.com/en_GB/external", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
+  // Goldman Sachs: custom Next.js app ("Higher") with an Apollo/GraphQL client — confirmed via
+  // `__NEXT_DATA__`, whose `initialApolloState` ships empty, so job data loads entirely
+  // client-side after JS boot. Not bot-blocked, just genuinely needs a browser.
   { id: "co-goldmansachs", category: "company", name: "Goldman Sachs", identifier: "https://higher.gs.com/results", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
   // Meta: not bot-blocked, but genuinely needs a real browser — job data only loads via
   // POST /graphql calls carrying session-specific tokens (lsd, __hsi, etc.) generated by
   // Facebook's internal "Comet" framework after full JS boot. Same category as TikTok.
   { id: "co-meta", category: "company", name: "Meta", identifier: "https://www.metacareers.com/jobs", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Tech", group: "Big Tech" },
-  { id: "co-blackrock", category: "company", name: "Blackrock", identifier: "https://careers.blackrock.com/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
+  // PayPal, Visa, ServiceNow, X/Twitter: all return a Cloudflare "Just a moment…" JS challenge
+  // to non-browser requests — same enforcement category as Agoda/Citadel/DoorDash/Canva.
   { id: "co-paypal", category: "company", name: "PayPal", identifier: "https://careers.pypl.com/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Payments & FinTech" },
-  { id: "co-visa", category: "company", name: "Visa", identifier: "https://usa.visa.com/careers/search-careers.html", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
+  { id: "co-visa", category: "company", name: "Visa", identifier: "https://usa.visa.com/careers.html", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
   { id: "co-servicenow", category: "company", name: "Service Now", identifier: "https://careers.servicenow.com/jobs/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Tech", group: "Software" },
-  { id: "co-expedia", category: "company", name: "Expedia", identifier: "https://careers.expediagroup.com/jobs/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Travel", group: "Travel and Ride Share" },
-  { id: "co-ebay", category: "company", name: "Ebay", identifier: "https://jobs.ebaycareers.com/global/en/search-results", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Tech", group: "E-Commerce" },
   { id: "co-twitter", category: "company", name: "X (Twitter)", identifier: "https://careers.x.com/en", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Media", group: "Media and Entertainment" },
+  // eBay: moved domains (jobs.ebaycareers.com now 301s here) — also on Phenom People, same
+  // platform as Cisco above, and hits the same "Tenant not identified" wall on the guessed
+  // /api/apply/v2/jobs params. Per-location pages (e.g. /us/en/jobs-in-california) DO
+  // server-render real listings, confirmed via plain curl — but there's no single unified
+  // "all jobs" feed, only ~30 separate per-location pages, each needing its own pagination.
+  { id: "co-ebay", category: "company", name: "Ebay", identifier: "https://jobs.ebayinc.com/us/en/jobs-by-location", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Tech", group: "E-Commerce" },
   // Tesla: the real jobs endpoint (tesla.com/cua-api/apps/careers/state, found by watching
   // network traffic in a real browser session, where it renders fine) returns Akamai's
   // "Access Denied" page when hit directly — Akamai Bot Manager, confirmed via response body
@@ -104,4 +129,21 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // fetchable only contain footer/nav content, not the listings) — needs a proper look, not a
   // guess.
   { id: "co-line", category: "company", name: "Line", identifier: "https://careers.linecorp.com/jobs/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Tech", group: "Social Media" },
+
+  // --- Consulting: added as placeholders, career sites not yet investigated. Identifier is a
+  // literal "not yet investigated" marker, not a real URL, until someone actually looks these up.
+  // Subgrouped as: Management Consulting (MBB), Tech Consulting (large-scale IT/digital
+  // transformation practices), Big 4 & Professional Services (audit-and-advisory firms whose
+  // consulting arms are one part of a much bigger business — not boutiques), and Boutique
+  // Consulting (smaller, strategy-focused specialists).
+  { id: "co-mckinsey", category: "company", name: "McKinsey & Company", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Management Consulting" },
+  { id: "co-bain", category: "company", name: "Bain & Company", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Management Consulting" },
+  { id: "co-bcg", category: "company", name: "BCG", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Management Consulting" },
+  { id: "co-deloitte", category: "company", name: "Deloitte", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Tech Consulting" },
+  { id: "co-accenture", category: "company", name: "Accenture", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Tech Consulting" },
+  { id: "co-pwc", category: "company", name: "PwC", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Big 4 & Professional Services" },
+  { id: "co-ey", category: "company", name: "EY", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Big 4 & Professional Services" },
+  { id: "co-kearney", category: "company", name: "Kearney", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Boutique Consulting" },
+  { id: "co-lek", category: "company", name: "L.E.K. Consulting", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Boutique Consulting" },
+  { id: "co-kpmg", category: "company", name: "KPMG", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Big 4 & Professional Services" },
 ];

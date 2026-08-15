@@ -68,10 +68,14 @@ export type SourceGroup =
   | "Travel and Ride Share"
   | "Software"
   | "Social Media"
+  | "Management Consulting"
+  | "Tech Consulting"
+  | "Big 4 & Professional Services"
+  | "Boutique Consulting"
   | "Etc";
 
 /** Top-level umbrella shown on the /sources page above its groups. */
-export type BigCategory = "FinTech" | "Tech";
+export type BigCategory = "FinTech" | "Tech" | "Consulting";
 
 export interface ScanSource {
   id: string;

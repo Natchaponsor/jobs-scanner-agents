@@ -26,13 +26,16 @@ open roles are a separate, working source — see the table below.)
   and scans each posting's full raw location string, not just a rigid "City, Country" format —
   needed because real ATS location strings are inconsistent (multi-location lists, 2/3-letter
   country codes, bare city names).
-- **Scan sources page** (`/sources`) — clearly split into two sections: "Social platforms"
-  (job boards, not automated — see below) and "Career sites" (individual companies, nested
-  under two big categories: FinTech (Banks & Traditional Finance, Payments & FinTech, Quant/
-  Hedge Funds & Crypto) and Tech (Big Tech, Software, AI, E-Commerce, Media and Entertainment,
-  Social Media, Travel and Ride Share, Etc)). Each subcategory has its own master toggle to
-  enable/disable every working source in it at once. Sources marked "not yet supported" stay
-  off until a real adapter is confirmed for them.
+- **Scan sources page** (`/sources`) — three separate cards: "Social platforms" (job boards,
+  not automated — see below), "Career sites" (individual companies, nested under three big
+  categories: FinTech (Banks & Traditional Finance, Payments & FinTech, Quant/Hedge Funds &
+  Crypto), Tech (Big Tech, Software, AI, E-Commerce, Media and Entertainment, Social Media,
+  Travel and Ride Share, Etc), and Consulting (Management Consulting, Tech Consulting, Big 4 &
+  Professional Services, Boutique Consulting)), and "Additional company" (custom sources you've
+  added, plus the add-a-company form). Every collapsible section — Social media, each big
+  category, each subcategory — starts collapsed by default. Each subcategory has its own master
+  toggle to enable/disable every working source in it at once. Sources marked "not yet
+  supported" stay off until a real adapter is confirmed for them.
 - **Export to Excel** — top nav, between Dashboard and Scan sources; exports whatever the
   current filters/sort are showing.
 - **Saved/applied tracking**, sortable by newest or company, adjustable page size.
@@ -46,24 +49,31 @@ open roles are a separate, working source — see the table below.)
 | Airbnb, SoFi, Stripe, Adyen, Chime, Binance, Robinhood, Anthropic, Lyft, Figma, Datadog, Quince, LinkedIn (their own careers, not the job-board platform) | Greenhouse | ✅ working |
 | Spotify | Lever | ✅ working |
 | Column, Air Wallex, Ramp, OpenAI, Handshake (their own careers, not the job-board platform), Mercor | Ashby | ✅ working |
-| Adobe, Capital One | Workday | ✅ working |
+| Adobe, Capital One, Expedia, NVIDIA, Bank of America | Workday | ✅ working |
 | Amazon / AWS | Amazon's own API | ✅ working |
 | JPMorgan | Oracle Fusion Recruiting Cloud's public REST API | ✅ working |
 | Google, Two Sigma, LINE MAN Wongnai (covers LINE MAN, Wongnai, LINE Pay Thailand) | Server-rendered HTML/hydration state, parsed directly (no browser needed — confirmed via plain `curl`) | ✅ working |
+| Intuit, BlackRock | Radancy/TalentBrew career-site platform (same family as Two Sigma above, different theme per company) — server-renders its full paginated listing, parsed with `cheerio` | ✅ working |
 | Shopee | Sea Group's own recruiting API (`ats.workatsea.com`), public and unauthenticated. Scoped to Thailand rather than pulling all ~2,600 jobs across every Sea Group market — see `lib/adapters/shopee.ts`. | ✅ working |
 | Netflix | Eightfold | ⚠️ adapter present, disabled by default — endpoint returned a bot-protection page during testing |
 | TikTok/ByteDance | — | Client-side rendered with no exposed API. The one case that's genuinely just "needs a real browser" (not bot-mitigated) — would need a Playwright adapter, which is a real new dependency (~300MB Chromium), so it's flagged rather than added speculatively. |
 | Meta | — | Same as TikTok — not bot-blocked, but `metacareers.com` runs on Facebook's internal "Comet" GraphQL framework; job data only loads via `POST /graphql` calls carrying session tokens generated after full JS boot. |
 | Amex | — | Client-rendered *and* its data API is proxied through randomized, rotating paths — classic PerimeterX-style obfuscation. Not building around that. |
 | Microsoft | — | Its search API stalls mid-TLS-handshake for non-browser clients — TLS-fingerprint-based bot blocking. Not building around that either. |
-| Agoda, Citadel, DoorDash, Canva | — | All return a Cloudflare "Just a moment…" JS challenge to non-browser requests. Same line as LinkedIn(platform)/Glassdoor: not building a bypass. |
+| Agoda, Citadel, DoorDash, Canva, PayPal, Visa, ServiceNow, X/Twitter | — | All return a Cloudflare "Just a moment…" JS challenge to non-browser requests. Same line as LinkedIn(platform)/Glassdoor: not building a bypass. |
 | Lazada | — | The real job-search backend (`aidc-jobs.alibaba.com`, Alibaba Group's shared international recruiting platform) loads Alibaba's "Baxia" anti-bot script and requires a `getSecurityId` token before the job API responds. Same policy as Agoda/Citadel/Microsoft/Tesla: not building around active bot-mitigation. |
 | Tesla | — | Found the real endpoint (`tesla.com/cua-api/apps/careers/state`) by watching network traffic in a real browser — renders fine there. Hitting it directly gets Akamai Bot Manager's "Access Denied" page. Same enforcement category as Agoda/Citadel/Microsoft, different vendor. |
 | Line (LY Corp) | — | Not bot-blocked — runs on Gatsby + a Strapi-backed API — but the real job-listing endpoint wasn't found in a quick pass (the directly-fetchable `page-data.json` files only contain footer/nav content, not listings). Worth a proper look, not yet done. |
-| Bank of America, Cisco, Uber, NVIDIA, Apple, Intuit, HSBC, Goldman Sachs, Blackrock, PayPal, Visa, ServiceNow, Expedia, eBay, X/Twitter | — | Not yet identified — quick-probed (SSR check, common Workday/Eightfold guesses) rather than deep-dived one at a time. Likely a mix of custom SPAs and platforms not yet discovered. |
+| Cisco, eBay | — | Both on Phenom People (`cdn.phenompeople.com`). The public `/api/apply/v2/jobs` endpoint is real, but every tenant-id guess derived from CDN asset paths returns "Tenant not identified" — the correct param wasn't found without live network capture against these specific tenants. eBay also has per-location pages (e.g. `/us/en/jobs-in-california`) that genuinely server-render, but there's no single unified feed, only ~30 separate location pages. |
+| HSBC | — | Runs on Avature — a new ATS family for this project. The search page is a form/wizard shell; the results-page URL convention wasn't found without driving the wizard in a real browser. |
+| Goldman Sachs | — | Custom Next.js app ("Higher") with an Apollo/GraphQL client — confirmed via `__NEXT_DATA__`, whose `initialApolloState` ships empty. Not bot-blocked, just genuinely client-rendered. |
+| Uber, Apple | — | Uber's 406 is just strict Accept-header negotiation (not bot-blocking), but the real page is a client-only SPA with no discoverable API. Apple's "Workday" references are a false positive (internal HR copy, not its career site); it's a custom Next.js-shaped app with no server-rendered listing found. |
 
-28 of 55 default company sources are live and working; the rest are visible but disabled on
-`/sources` with the specific reason noted above rather than a generic "not yet supported."
+33 of 65 default company sources are live and working; the rest are visible but disabled on
+`/sources` with the specific reason noted above rather than a generic "not yet supported." The
+10 consulting firms (McKinsey, Bain, BCG, Deloitte, Accenture, PwC, EY, Kearney, L.E.K.,
+KPMG) are placeholders only — added to the source list and grouped, but their career sites
+haven't been investigated yet, so they're not in the table below.
 
 ## Getting started
 
