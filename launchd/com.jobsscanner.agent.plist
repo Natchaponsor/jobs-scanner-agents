@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Runs the job scanner agent once a day at 9:00am. Paths below are pre-filled for this machine
+  (node/npm at /opt/homebrew/bin, repo at /Users/top/jobs-scanner-agents) — update them if you
+  move the repo or reinstall Node. See AGENT.md for install/uninstall/troubleshooting steps.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.jobsscanner.agent</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/npm</string>
+    <string>run</string>
+    <string>agent</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/top/jobs-scanner-agents</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>9</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <!-- If the Mac was asleep at 9:00am, run as soon as it wakes instead of skipping the day. -->
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/jobs-scanner-agent.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/jobs-scanner-agent.error.log</string>
+</dict>
+</plist>

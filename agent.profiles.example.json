@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Example — Bangkok Product Manager roles",
+    "filters": {
+      "locationCountry": "Thailand",
+      "locationCity": "Bangkok",
+      "function": "Product Manager",
+      "yearsExperience": "3-5",
+      "jobType": "any",
+      "workMode": "any",
+      "industry": "any",
+      "search": ""
+    },
+    "notify": {
+      "channel": "ntfy",
+      "ntfyTopic": "replace-with-a-random-unguessable-topic-name",
+      "frequency": "daily"
+    }
+  }
+]

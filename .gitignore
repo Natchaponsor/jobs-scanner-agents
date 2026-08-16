@@ -7,3 +7,8 @@ next-env.d.ts
 .DS_Store
 .env
 .env.local
+
+# Real agent config/state — contains your actual filters and ntfy topic; only the
+# .example.json template is committed. See AGENT.md.
+agent.profiles.json
+agent-state/
