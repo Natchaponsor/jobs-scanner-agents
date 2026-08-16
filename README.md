@@ -89,6 +89,44 @@ npm run dev
 
 Opens on **http://localhost:3002**. Click "Scan now" — nothing scans automatically.
 
+## Background agent (this branch only — not yet merged into `main`)
+
+Everything above is on-demand: nothing scans until you click "Scan now." This branch adds an
+optional agent that runs the same scan on a schedule and pings you when a saved search turns
+up something new, without a browser open. It reuses the dashboard's own filter logic
+end-to-end, so "interesting" means exactly what it'd mean if you set those filters by hand —
+no separate matching logic, no LLM calls, still zero-cost.
+
+To turn it on:
+
+1. **Create a profile** — copy the template and fill in your own saved search:
+   ```bash
+   cp agent.profiles.example.json agent.profiles.json
+   ```
+   Each profile is a filter set (location, function, years of experience, job type, work
+   mode, industry, search — the exact same fields as the dashboard's filter bar) plus how you
+   want to be notified: `channel` (`"ntfy"` or `"macos"`) and `frequency`
+   (`"immediate"`/`"hourly"`/`"daily"`).
+2. **Dry-run it** — scans for real, prints what it would send, but doesn't notify or save
+   state:
+   ```bash
+   npm run agent -- --dry-run
+   ```
+3. **Run it for real once** to confirm a notification actually lands:
+   ```bash
+   npm run agent
+   ```
+4. **Schedule it** with `launchd` (macOS's native scheduler — handles a sleeping laptop better
+   than cron) using the plist already set up for this machine in
+   `launchd/com.jobsscanner.agent.plist`:
+   ```bash
+   cp launchd/com.jobsscanner.agent.plist ~/Library/LaunchAgents/
+   launchctl load ~/Library/LaunchAgents/com.jobsscanner.agent.plist
+   ```
+
+Full walkthrough — including how ntfy.sh topics work, checking the schedule is registered,
+reading logs, uninstalling, and current limitations — is in [AGENT.md](AGENT.md).
+
 ## Extraction
 
 Years of experience, function, work mode, and job type are inferred with regex/keyword
