@@ -138,22 +138,53 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // guess.
   { id: "co-line", category: "company", name: "Line", identifier: "https://careers.linecorp.com/jobs/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Tech", group: "Social Media" },
 
-  // --- Consulting: added as placeholders, career sites not yet investigated. Identifier is a
-  // literal "not yet investigated" marker, not a real URL, until someone actually looks these up.
-  // Subgrouped as: Management Consulting (MBB), Tech Consulting (large-scale IT/digital
-  // transformation practices), Big 4 & Professional Services (audit-and-advisory firms whose
-  // consulting arms are one part of a much bigger business — not boutiques), and Boutique
-  // Consulting (smaller, strategy-focused specialists).
-  { id: "co-mckinsey", category: "company", name: "McKinsey & Company", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Management Consulting" },
-  { id: "co-bain", category: "company", name: "Bain & Company", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Management Consulting" },
-  { id: "co-bcg", category: "company", name: "BCG", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Management Consulting" },
-  { id: "co-deloitte", category: "company", name: "Deloitte", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Tech Consulting" },
-  { id: "co-accenture", category: "company", name: "Accenture", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Tech Consulting" },
-  { id: "co-pwc", category: "company", name: "PwC", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Big 4 & Professional Services" },
-  { id: "co-ey", category: "company", name: "EY", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Big 4 & Professional Services" },
-  { id: "co-kearney", category: "company", name: "Kearney", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Boutique Consulting" },
-  { id: "co-lek", category: "company", name: "L.E.K. Consulting", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Boutique Consulting" },
-  { id: "co-kpmg", category: "company", name: "KPMG", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Big 4 & Professional Services" },
+  // --- Consulting: investigated for US + APAC (Singapore/Thailand) coverage specifically.
+  // Per instruction, every consulting source ships with enabled:false regardless of whether a
+  // working adapter was found — these stay off by default even once "adapter ready", unlike
+  // every other group on the page. Subgrouped as: Management Consulting (MBB), Tech Consulting
+  // (large-scale IT/digital transformation practices), Big 4 & Professional Services
+  // (audit-and-advisory firms whose consulting arms are one part of a much bigger business —
+  // not boutiques), and Boutique Consulting (smaller, strategy-focused specialists).
+  //
+  // McKinsey: the TLS/HTTP2 handshake completes but the server resets the stream
+  // ("INTERNAL_ERROR") for a non-browser client, on both HTTP/2 and HTTP/1.1 — TLS/protocol-
+  // fingerprint-based bot blocking, same enforcement category as Microsoft.
+  { id: "co-mckinsey", category: "company", name: "McKinsey & Company", identifier: "https://www.mckinsey.com/careers/search-jobs", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Management Consulting" },
+  // Bain: Cloudflare "challenge" mitigation, confirmed via the cf-mitigated response header
+  // (not just a generic 403) — same policy as Agoda/Citadel/DoorDash/Canva.
+  { id: "co-bain", category: "company", name: "Bain & Company", identifier: "https://www.bain.com/careers/find-a-role/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Management Consulting" },
+  // BCG: on Phenom People, but unlike Cisco/eBay below, the search-results page embeds the
+  // full result set directly as server-rendered JSON (`phApp.ddo = {...}`) — no API-tenant
+  // guessing needed. Global listing confirmed to include Singapore, Vietnam, Philippines,
+  // Indonesia, and Malaysia postings — see lib/adapters/html/bcg.ts.
+  { id: "co-bcg", category: "company", name: "BCG", identifier: "co-bcg", adapterType: "html-scrape", enabled: false, isDefault: true, industry: "Consulting", group: "Management Consulting" },
+  // Deloitte: Radancy/TalentBrew (same platform as Two Sigma/Intuit/BlackRock/PwC below) —
+  // server-renders its full listing. US-only; other Deloitte member firms run on separate
+  // sites not yet investigated — see lib/adapters/html/deloitte.ts.
+  { id: "co-deloitte", category: "company", name: "Deloitte", identifier: "co-deloitte", adapterType: "html-scrape", enabled: false, isDefault: true, industry: "Consulting", group: "Tech Consulting" },
+  // Accenture: standard Workday (accenture.wd103.myworkdayjobs.com), confirmed working with
+  // real Singapore results via the generic adapter — no bespoke code needed.
+  { id: "co-accenture", category: "company", name: "Accenture", identifier: "accenture.wd103.myworkdayjobs.com|AccentureCareers", adapterType: "workday", enabled: false, isDefault: true, industry: "Consulting", group: "Tech Consulting" },
+  // PwC: like KPMG below, no single global site — merges jobs.us.pwc.com (Radancy, US) with
+  // PwC's global Workday tenant (pwc.wd3.myworkdayjobs.com, searched for Singapore/Bangkok
+  // rather than pulling all ~4,500 jobs worldwide) — see lib/adapters/html/pwc.ts.
+  { id: "co-pwc", category: "company", name: "PwC", identifier: "co-pwc", adapterType: "html-scrape", enabled: false, isDefault: true, industry: "Consulting", group: "Big 4 & Professional Services" },
+  // EY: SAP SuccessFactors' Career Site Builder — server-renders its full listing. Global site
+  // lists ~7,300 jobs worldwide; scoped via locationsearch to United States/Singapore/Thailand,
+  // all three confirmed with real matching postings — see lib/adapters/html/ey.ts.
+  { id: "co-ey", category: "company", name: "EY", identifier: "co-ey", adapterType: "html-scrape", enabled: false, isDefault: true, industry: "Consulting", group: "Big 4 & Professional Services" },
+  // Kearney: Cloudflare challenge (captcha page body, __cf_bm cookie) — same policy as
+  // Agoda/Citadel/DoorDash/Canva/Bain above.
+  { id: "co-kearney", category: "company", name: "Kearney", identifier: "https://www.kearney.com/careers", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Boutique Consulting" },
+  // L.E.K. Consulting: runs on Oleeo/TalentLink (lek.tal.net) — individual job pages are
+  // gated behind an ALTCHA proof-of-work captcha ("Quick Check Needed... confirm you're a
+  // real person"), confirmed via plain curl. Active bot-mitigation, not attempting a bypass.
+  { id: "co-lek", category: "company", name: "L.E.K. Consulting", identifier: "https://www.lek.com/careers", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Boutique Consulting" },
+  // KPMG: no single global site (independent member firms per country) — merges
+  // kpmguscareers.com (Radancy, US) with kpmg.com/th/en/careers (Adobe Experience Manager,
+  // Thailand postings listed directly as content pages, confirmed via plain curl). Singapore
+  // wasn't found on this pass — see lib/adapters/html/kpmg.ts.
+  { id: "co-kpmg", category: "company", name: "KPMG", identifier: "co-kpmg", adapterType: "html-scrape", enabled: false, isDefault: true, industry: "Consulting", group: "Big 4 & Professional Services" },
 
   // --- Private Equity: added as placeholders, career sites not yet investigated. Mix of major
   // US firms and firms with a strong Southeast Asia presence.

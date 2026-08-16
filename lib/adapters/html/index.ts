@@ -4,6 +4,11 @@ import { twoSigmaAdapter } from "./twosigma";
 import { linemanWongnaiAdapter } from "./linemanwongnai";
 import { intuitAdapter } from "./intuit";
 import { blackrockAdapter } from "./blackrock";
+import { bcgAdapter } from "./bcg";
+import { deloitteAdapter } from "./deloitte";
+import { eyAdapter } from "./ey";
+import { pwcAdapter } from "./pwc";
+import { kpmgAdapter } from "./kpmg";
 
 /**
  * HTML structure isn't standardized like an ATS API, so each company gets its own parser.
@@ -15,6 +20,11 @@ const HTML_SCRAPERS: Record<string, Adapter> = {
   "co-linemanwongnai": linemanWongnaiAdapter,
   "co-intuit": intuitAdapter,
   "co-blackrock": blackrockAdapter,
+  "co-bcg": bcgAdapter,
+  "co-deloitte": deloitteAdapter,
+  "co-ey": eyAdapter,
+  "co-pwc": pwcAdapter,
+  "co-kpmg": kpmgAdapter,
 };
 
 export const htmlScrapeAdapter: Adapter = {

@@ -56,6 +56,12 @@ open roles are a separate, working source — see the table below.)
 | Google, Two Sigma, LINE MAN Wongnai (covers LINE MAN, Wongnai, LINE Pay Thailand) | Server-rendered HTML/hydration state, parsed directly (no browser needed — confirmed via plain `curl`) | ✅ working |
 | Intuit, BlackRock | Radancy/TalentBrew career-site platform (same family as Two Sigma above, different theme per company) — server-renders its full paginated listing, parsed with `cheerio` | ✅ working |
 | Shopee | Sea Group's own recruiting API (`ats.workatsea.com`), public and unauthenticated. Scoped to Thailand rather than pulling all ~2,600 jobs across every Sea Group market — see `lib/adapters/shopee.ts`. | ✅ working |
+| BCG | Phenom People, but embeds its full result set as a server-rendered JSON blob (`phApp.ddo = {...}`) rather than needing the tenant-guessing that blocked Cisco/eBay below. Global listing, confirmed Singapore/Vietnam/Philippines/Indonesia/Malaysia postings — see `lib/adapters/html/bcg.ts`. | ✅ working, disabled by default |
+| Deloitte, PwC (US portion), KPMG (US portion) | Radancy/TalentBrew (same family as Two Sigma/Intuit/BlackRock above) — server-renders its full listing. US-only; other member firms run on separate country sites. | ✅ working, disabled by default |
+| Accenture | Workday (`accenture.wd103.myworkdayjobs.com`) — generic adapter, confirmed real Singapore results | ✅ working, disabled by default |
+| PwC (APAC portion) | PwC's global Workday tenant (`pwc.wd3.myworkdayjobs.com`), searched for "Singapore"/"Bangkok" rather than pulling all ~4,500 jobs worldwide — merged with the US Radancy source above, see `lib/adapters/html/pwc.ts`. | ✅ working, disabled by default |
+| EY | SAP SuccessFactors Career Site Builder — server-renders its full listing. Global site lists ~7,300 jobs; scoped via `locationsearch` to United States/Singapore/Thailand, all three confirmed with real matches — see `lib/adapters/html/ey.ts`. | ✅ working, disabled by default |
+| KPMG (Thailand portion) | Adobe Experience Manager — job postings are individual content pages listed directly on the Thailand "Experienced Hires" page, not run through a separate ATS — merged with the US Radancy source above, see `lib/adapters/html/kpmg.ts`. | ✅ working, disabled by default |
 | Netflix | Eightfold | ⚠️ adapter present, disabled by default — endpoint returned a bot-protection page during testing |
 | TikTok/ByteDance | — | Client-side rendered with no exposed API. The one case that's genuinely just "needs a real browser" (not bot-mitigated) — would need a Playwright adapter, which is a real new dependency (~300MB Chromium), so it's flagged rather than added speculatively. |
 | Meta | — | Same as TikTok — not bot-blocked, but `metacareers.com` runs on Facebook's internal "Comet" GraphQL framework; job data only loads via `POST /graphql` calls carrying session tokens generated after full JS boot. |
@@ -69,12 +75,22 @@ open roles are a separate, working source — see the table below.)
 | HSBC | — | Runs on Avature — a new ATS family for this project. The search page is a form/wizard shell; the results-page URL convention wasn't found without driving the wizard in a real browser. |
 | Goldman Sachs | — | Custom Next.js app ("Higher") with an Apollo/GraphQL client — confirmed via `__NEXT_DATA__`, whose `initialApolloState` ships empty. Not bot-blocked, just genuinely client-rendered. |
 | Uber, Apple | — | Uber's 406 is just strict Accept-header negotiation (not bot-blocking), but the real page is a client-only SPA with no discoverable API. Apple's "Workday" references are a false positive (internal HR copy, not its career site); it's a custom Next.js-shaped app with no server-rendered listing found. |
+| McKinsey | — | The TLS/HTTP2 handshake completes but the server resets the stream (`INTERNAL_ERROR`) for a non-browser client, on both HTTP/2 and HTTP/1.1 — TLS/protocol-fingerprint-based bot blocking, same enforcement category as Microsoft. |
+| Bain, Kearney | — | Cloudflare mitigation — Bain's response carries an explicit `cf-mitigated: challenge` header; Kearney serves a captcha challenge page. Same policy as Agoda/Citadel/DoorDash/Canva. |
+| L.E.K. Consulting | — | Runs on Oleeo/TalentLink (`lek.tal.net`) — individual job pages are gated behind an ALTCHA proof-of-work captcha ("Quick Check Needed... confirm you're a real person"), confirmed via plain curl. Active bot-mitigation, not attempting a bypass. |
 
-33 of 82 default company sources are live and working; the rest are visible but disabled on
-`/sources` with the specific reason noted above rather than a generic "not yet supported." Three
-groups are placeholders only — added to the source list and grouped, but their career sites
-haven't been investigated yet, so they're not in the table below:
-- 10 consulting firms: McKinsey, Bain, BCG, Deloitte, Accenture, PwC, EY, Kearney, L.E.K., KPMG
+39 of 82 default company sources are live and working; the rest are visible but disabled on
+`/sources` with the specific reason noted above rather than a generic "not yet supported."
+
+All 10 consulting firms (McKinsey, Bain, BCG, Deloitte, Accenture, PwC, EY, Kearney, L.E.K.,
+KPMG) were investigated for US and APAC (Singapore/Thailand especially) coverage; 6 came back
+with real working adapters (confirmed 140 Thailand-tagged and 130 Singapore-tagged postings in
+testing) and 4 are genuinely bot-mitigated. Every consulting source ships `enabled: false` by
+default regardless of adapter status — unlike every other group on `/sources`, "adapter ready"
+here doesn't mean "on by default." Toggle them on by hand if you want them scanned.
+
+Two other groups are placeholders only — added to the source list and grouped, but their
+career sites haven't been investigated yet, so they're not in the table above:
 - 7 more quant trading firms: Jane Street, DRW, Jump Trading, Hudson River Trading, Optiver,
   IMC Trading, Susquehanna International Group (SIG)
 - 10 private equity firms: Lakeshore Capital, Blackstone, KKR, Carlyle Group, TPG, Warburg
