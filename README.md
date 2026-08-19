@@ -113,6 +113,29 @@ npm run dev
 
 Opens on **http://localhost:3002**. Click "Scan now" — nothing scans automatically.
 
+## Testing
+
+```bash
+npm run test
+```
+
+Vitest, `node` environment, no DOM/component tests — coverage is the pure extraction/filtering
+logic in `lib/`, not the UI. 26 tests across 3 files:
+
+- `lib/extract.test.ts` — `extractWorkAuthorization` (US-only scoping, citizen-only/sponsorship
+  detection, the two phrasing bugs caught during manual testing: rigid "security clearance
+  required" word order, and "sponsor work visas"/"offer ... sponsorship" phrasing that the
+  original pattern missed) and `extractFunction` (every function label added this round, plus
+  a regression guard on the FUNCTION_KEYWORDS reordering — "Engineering Manager, Backend" must
+  resolve to Engineering Management, not get caught by the broader Software Engineer pattern).
+- `lib/selectors.test.ts` — `filterAndSortJobs`'s work authorization filter: passes everything
+  through on "any", restricts US jobs to the selected value, and — the actual point of the
+  feature — never excludes non-US jobs no matter what's selected.
+- `lib/defaultSources.test.ts` — data-integrity checks on the industry re-tagging: no source is
+  still on the old generic "Tech" catch-all, every source's industry is a known differentiated
+  value, and the specific companies that moved (Big Tech/E-Commerce/Social Media/merged into
+  Travel/Software/Media) landed where intended.
+
 ## Extraction
 
 Years of experience, function, work mode, and job type are inferred with regex/keyword
