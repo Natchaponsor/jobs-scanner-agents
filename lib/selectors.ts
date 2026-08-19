@@ -28,6 +28,12 @@ export function filterAndSortJobs(
     if (filters.workMode !== "any" && job.workMode !== "not-specified") {
       if (job.workMode !== filters.workMode) return false;
     }
+    // Work authorization is a US-specific hiring convention (see extractWorkAuthorization) —
+    // only US postings are held to this filter; every other country's jobs pass through
+    // regardless of what's selected here.
+    if (filters.workAuthorization !== "any" && job.locationCountry === "United States") {
+      if (job.workAuthorization !== filters.workAuthorization) return false;
+    }
     if (filters.industry !== "any" && job.industry !== filters.industry) return false;
 
     if (search) {

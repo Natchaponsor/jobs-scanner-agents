@@ -21,11 +21,19 @@ open roles are a separate, working source — see the table below.)
 
 - **On-demand scanning** — nothing runs on a schedule; click "Scan now."
 - **Filters**: location (country picker — US/UK/Singapore/Thailand/APAC/Any — plus a city/state
-  text box with suggested-city chips per country), function, years of experience, job type,
-  work mode, industry, and free-text search. Location filtering is keyword-based (`lib/locations.ts`)
-  and scans each posting's full raw location string, not just a rigid "City, Country" format —
-  needed because real ATS location strings are inconsistent (multi-location lists, 2/3-letter
-  country codes, bare city names).
+  text box with suggested-city chips per country), function (22 labels — Product/Program
+  Manager, Engineering Management, Business Operations Manager, Business Development,
+  Consulting, Customer Success, Supply Chain/Logistics, Strategy, and more), years of
+  experience, job type, work mode, work authorization, industry (9 values — Big Tech,
+  E-Commerce, Social Media, Finance, Software, Media, Travel, AI, Consulting), and free-text
+  search. Location filtering is keyword-based (`lib/locations.ts`) and scans each posting's
+  full raw location string, not just a rigid "City, Country" format — needed because real ATS
+  location strings are inconsistent (multi-location lists, 2/3-letter country codes, bare city
+  names).
+- **Work authorization filter** (US jobs only — the dropdown disables itself otherwise):
+  "US Citizen Only" / "Sponsorship Available" / "n/a", regex-inferred from posting text
+  (`extractWorkAuthorization` in `lib/extract.ts`) — no LLM, so most postings that don't
+  explicitly mention citizenship/sponsorship land in "n/a" rather than a guess.
 - **Scan sources page** (`/sources`) — three separate cards: "Social platforms" (job boards,
   not automated — see below), "Career sites" (individual companies, nested under three big
   categories: Finance (Banks & Traditional Finance, Payments & FinTech, Quant/Hedge Funds &

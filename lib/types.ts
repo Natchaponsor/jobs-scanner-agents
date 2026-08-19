@@ -1,6 +1,11 @@
 export type JobType = "FT" | "PT" | "Internship";
 export type WorkMode = "in-person" | "hybrid" | "remote" | "not-specified";
 export type YoeBucket = "0-3" | "3-5" | "5-10" | "10+" | "not-specified";
+/** Only ever inferred for US postings — see extractWorkAuthorization in lib/extract.ts. Every
+ *  non-US job is "n/a", not because sponsorship isn't a real concern elsewhere, but because
+ *  the "US citizen only" / "we sponsor visas" phrasing this is pattern-matched against is a
+ *  specifically US hiring convention. */
+export type WorkAuthorization = "US Citizen Only" | "Sponsorship Available" | "n/a";
 export interface Job {
   /** Stable id: `${sourceName}::${url}` */
   id: string;
@@ -17,6 +22,7 @@ export interface Job {
   yearsExperience: YoeBucket;
   jobType: JobType;
   workMode: WorkMode;
+  workAuthorization: WorkAuthorization;
   industry: string;
   url: string;
   discoveredAt: string;
@@ -108,6 +114,7 @@ export interface Filters {
   yearsExperience: YoeBucket | "any";
   jobType: JobType | "any";
   workMode: WorkMode | "any";
+  workAuthorization: WorkAuthorization | "any";
   industry: string;
   search: string;
 }

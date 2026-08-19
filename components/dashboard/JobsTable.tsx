@@ -44,6 +44,7 @@ export function JobsTable({ jobs, startIndex }: { jobs: Job[]; startIndex: numbe
                     <Badge tone="accent">{job.yearsExperience} yrs</Badge>
                   )}
                   {job.workMode !== "not-specified" && <Badge tone="neutral">{job.workMode}</Badge>}
+                  {job.workAuthorization !== "n/a" && <Badge tone="neutral">{job.workAuthorization}</Badge>}
                 </div>
               </td>
               <td className="px-4 py-4 align-top text-fg-muted">

@@ -8,7 +8,7 @@ import { COUNTRY_FILTER_OPTIONS, SUGGESTED_CITIES } from "@/lib/locations";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
-import type { YoeBucket, JobType, WorkMode } from "@/lib/types";
+import type { YoeBucket, JobType, WorkMode, WorkAuthorization } from "@/lib/types";
 
 const YOE_OPTIONS: { label: string; value: YoeBucket | "any" }[] = [
   { label: "Any", value: "any" },
@@ -30,6 +30,13 @@ const WORK_MODE_OPTIONS: { label: string; value: WorkMode | "any" }[] = [
   { label: "In-person", value: "in-person" },
   { label: "Hybrid", value: "hybrid" },
   { label: "Remote", value: "remote" },
+];
+
+const WORK_AUTHORIZATION_OPTIONS: { label: string; value: WorkAuthorization | "any" }[] = [
+  { label: "Any", value: "any" },
+  { label: "US Citizen Only", value: "US Citizen Only" },
+  { label: "Sponsorship Available", value: "Sponsorship Available" },
+  { label: "n/a", value: "n/a" },
 ];
 
 function fieldClass() {
@@ -136,7 +143,7 @@ export function FiltersBar() {
       </Button>
 
       {showMore && (
-        <div className="mt-3 grid grid-cols-1 gap-3 border-t border-border pt-3 sm:grid-cols-3">
+        <div className="mt-3 grid grid-cols-1 gap-3 border-t border-border pt-3 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-fg-subtle">Job type</label>
             <select
@@ -164,6 +171,26 @@ export function FiltersBar() {
                 </option>
               ))}
             </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-fg-subtle">
+              Work authorization
+            </label>
+            <select
+              value={filters.workAuthorization}
+              onChange={(e) => setFilters({ workAuthorization: e.target.value as WorkAuthorization | "any" })}
+              disabled={filters.locationCountry !== "United States"}
+              className={cn(fieldClass(), "disabled:cursor-not-allowed disabled:opacity-50")}
+            >
+              {WORK_AUTHORIZATION_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            {filters.locationCountry !== "United States" && (
+              <p className="mt-1 text-xs text-fg-subtle">US jobs only</p>
+            )}
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-fg-subtle">Industry</label>

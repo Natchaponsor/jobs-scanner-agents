@@ -7,6 +7,7 @@ export const DEFAULT_FILTERS: Filters = {
   yearsExperience: "3-5",
   jobType: "any",
   workMode: "any",
+  workAuthorization: "any",
   industry: "any",
   search: "",
 };

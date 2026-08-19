@@ -1,5 +1,5 @@
 import { classifyLocation } from "./locations";
-import type { Job, JobType, ScanSource, WorkMode, YoeBucket } from "./types";
+import type { Job, JobType, ScanSource, WorkAuthorization, WorkMode, YoeBucket } from "./types";
 
 /** What an adapter hands back before normalization. Fields it can't determine are left undefined
  *  and filled in here via rule-based extraction from title/description text. */
@@ -18,33 +18,52 @@ export interface RawJob {
 
 export const FUNCTION_LABELS = [
   "Product Manager",
+  "Program Manager",
+  "Engineering Management",
+  "Business Operations Manager",
   "Software Engineer",
   "Data Scientist",
   "Data Analyst",
   "Data Engineer",
   "Design",
   "Marketing",
+  "Customer Success",
   "Sales",
+  "Business Development",
   "Finance",
   "HR / Recruiting",
+  "Consulting",
+  "Supply Chain / Logistics",
+  "Strategy",
   "Operations",
   "Research",
   "Legal",
   "Other",
 ];
 
+// Ordered most- to least-specific: extractFunction returns on the first match, so a title like
+// "Engineering Manager, Backend" needs to hit Engineering Management before the broader
+// Software Engineer pattern would otherwise claim it via "backend".
 const FUNCTION_KEYWORDS: [RegExp, string][] = [
   [/product\s*manager|product\s*management/i, "Product Manager"],
+  [/program\s*manager|program\s*management|project\s*manager|project\s*management/i, "Program Manager"],
+  [/engineering\s*manager|engineering\s*management/i, "Engineering Management"],
+  [/business\s*operations|biz\s*ops|revenue\s*operations|revops|sales\s*operations|salesops|operations\s*manager/i, "Business Operations Manager"],
   [/software\s*engineer|swe\b|backend|frontend|full[\s-]?stack/i, "Software Engineer"],
   [/data\s*scientist/i, "Data Scientist"],
   [/data\s*analyst/i, "Data Analyst"],
   [/data\s*engineer/i, "Data Engineer"],
   [/designer|ux\b|ui\/ux/i, "Design"],
   [/marketing/i, "Marketing"],
+  [/customer\s*success|customer\s*support|client\s*success/i, "Customer Success"],
   [/sales\b|account\s*executive/i, "Sales"],
+  [/business\s*development|bizdev/i, "Business Development"],
   [/finance|financial\s*analyst|accounting/i, "Finance"],
   [/recruit|talent\s*acquisition|hr\b|human\s*resources/i, "HR / Recruiting"],
-  [/operations|program\s*manager|project\s*manager/i, "Operations"],
+  [/consulting|consultant/i, "Consulting"],
+  [/supply\s*chain|logistics/i, "Supply Chain / Logistics"],
+  [/\bstrategy\b|strategic\s*planning/i, "Strategy"],
+  [/operations/i, "Operations"],
   [/research(?!ed)/i, "Research"],
   [/legal|counsel/i, "Legal"],
 ];
@@ -99,6 +118,26 @@ export function extractJobType(title: string): JobType {
   return "FT";
 }
 
+// Checked before SPONSORSHIP_AVAILABLE_PATTERN below, and deliberately broad on "security
+// clearance" — a posting that mentions it at all overwhelmingly means it's required. The
+// trailing clause is a proximity match for negated sponsorship ("unable to sponsor", "not
+// able to offer visa sponsorship") rather than true negation parsing — regex can't fully
+// cover natural-language phrasing variety, but this catches the common real forms.
+const US_CITIZEN_ONLY_PATTERN =
+  /must\s*be\s*a\s*(?:u\.?s\.?|united\s*states)\s*citizen|u\.?s\.?\s*citizenship\s*(?:is\s*)?required|security\s*clearance|(?:^|\W)(?:no|not|unable\s*to|cannot|can['’]?t|won['’]?t|will\s*not|does\s*not)\b[^.]{0,30}sponsor/i;
+const SPONSORSHIP_AVAILABLE_PATTERN =
+  /visa\s*sponsorship|sponsor(?:s|ship)?\s*(?:work\s*)?visas?|sponsor\s*work\s*authorization|h-?1b\s*sponsorship|we\s*(?:will\s*|do\s*|can\s*|are\s*happy\s*to\s*)?sponsor\b/i;
+
+/** Only meaningful for US postings — "US citizen only" / "we sponsor visas" is a US hiring
+ *  convention, so every other country's jobs are left "n/a" rather than guessed at. Within US
+ *  postings, defaults to "n/a" too when the posting simply doesn't mention it (most don't). */
+export function extractWorkAuthorization(text: string, country: string): WorkAuthorization {
+  if (country !== "United States") return "n/a";
+  if (US_CITIZEN_ONLY_PATTERN.test(text)) return "US Citizen Only";
+  if (SPONSORSHIP_AVAILABLE_PATTERN.test(text)) return "Sponsorship Available";
+  return "n/a";
+}
+
 export function normalize(raw: RawJob, source: ScanSource): Job {
   const { country, state, city } = classifyLocation(raw.location);
   const text = `${raw.title} ${raw.description}`;
@@ -115,6 +154,7 @@ export function normalize(raw: RawJob, source: ScanSource): Job {
     yearsExperience: raw.yearsExperience ?? extractYearsExperience(text),
     jobType: raw.jobType ?? extractJobType(raw.title),
     workMode: raw.workMode ?? extractWorkMode(text),
+    workAuthorization: extractWorkAuthorization(text, country),
     industry: source.industry,
     url: raw.url,
     discoveredAt: raw.postedAt ?? new Date().toISOString(),
