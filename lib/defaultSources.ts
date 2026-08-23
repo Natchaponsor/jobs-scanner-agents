@@ -20,6 +20,7 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "social-linkedin", category: "social", name: "LinkedIn", identifier: "https://www.linkedin.com/jobs/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "any", group: null },
   { id: "social-handshake", category: "social", name: "Handshake", identifier: "https://joinhandshake.com/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "any", group: null },
   { id: "social-glassdoor", category: "social", name: "Glassdoor", identifier: "https://www.glassdoor.com/Job/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "any", group: null },
+  { id: "social-indeed", category: "social", name: "Indeed", identifier: "https://www.indeed.com/jobs", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "any", group: null },
 
   // --- Company sites: confirmed working adapters ---
   { id: "co-airbnb", category: "company", name: "Airbnb", identifier: "airbnb", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Travel", group: "Travel and Ride Share" },
