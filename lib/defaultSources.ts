@@ -42,6 +42,12 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // underlying company slug ("Wise") works directly against the generic public API. Confirmed
   // real Singapore-tagged postings among ~426 total.
   { id: "co-wise", category: "company", name: "Wise", identifier: "Wise", adapterType: "smartrecruiters", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech" },
+  // Coda Payments: Lever, board token "Coda" — confirmed real Singapore- and
+  // Bangkok-tagged postings, its two biggest APAC hubs.
+  { id: "co-codapayments", category: "company", name: "Coda Payments", identifier: "Coda", adapterType: "lever", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech" },
+  // Nium: Lever, board token "nium" — confirmed real Singapore- and Kuala Lumpur-tagged
+  // postings.
+  { id: "co-nium", category: "company", name: "Nium", identifier: "nium", adapterType: "lever", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech" },
   { id: "co-binance", category: "company", name: "Binance", identifier: "binance", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
   { id: "co-robinhood", category: "company", name: "Robinhood", identifier: "robinhood", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech" },
   { id: "co-openai", category: "company", name: "OpenAI", identifier: "openai", adapterType: "ashby", enabled: true, isDefault: true, industry: "AI", group: "AI" },
@@ -58,11 +64,18 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // Singapore-tagged postings among ~392 total.
   { id: "co-snowflake", category: "company", name: "Snowflake", identifier: "snowflake", adapterType: "ashby", enabled: true, isDefault: true, industry: "Software", group: "Software" },
   { id: "co-paloalto", category: "company", name: "Palo Alto Networks", identifier: "paloaltonetworks.wd5.myworkdayjobs.com|panwexternalcareers", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software" },
+  { id: "co-trendmicro", category: "company", name: "Trend Micro", identifier: "trendmicro.wd3.myworkdayjobs.com|External", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software" },
+  { id: "co-propertyguru", category: "company", name: "PropertyGuru", identifier: "propertyguru.wd105.myworkdayjobs.com|PropertyGuru", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software" },
   { id: "co-quince", category: "company", name: "Quince", identifier: "quince", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "E-Commerce", group: "E-Commerce" },
   // LinkedIn's own careers page (Greenhouse) — separate from the "LinkedIn" social source
   // above, which represents scanning LinkedIn-the-job-board-platform (not automatable).
   { id: "co-linkedin", category: "company", name: "LinkedIn", identifier: "linkedin", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Social Media", group: "Social Media" },
   { id: "co-expedia", category: "company", name: "Expedia", identifier: "expedia.wd108.myworkdayjobs.com|search", adapterType: "workday", enabled: true, isDefault: true, industry: "Travel", group: "Travel and Ride Share" },
+  // AirAsia: mycareer.airasia.com is on Phenom People, same embedded `phApp.ddo` pattern as
+  // BCG/Cisco/eBay/Snowflake above — see lib/adapters/html/phenom.ts and
+  // lib/adapters/html/airasia.ts. ~142 jobs, confirmed real Singapore/Malaysia/Indonesia/
+  // Philippines/Cambodia postings.
+  { id: "co-airasia", category: "company", name: "AirAsia", identifier: "co-airasia", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Travel", group: "Travel and Ride Share" },
   { id: "co-nvidia", category: "company", name: "NVIDIA", identifier: "nvidia.wd5.myworkdayjobs.com|NVIDIAExternalCareerSite", adapterType: "workday", enabled: true, isDefault: true, industry: "Big Tech", group: "Big Tech" },
   { id: "co-bofa", category: "company", name: "Bank of America", identifier: "ghr.wd1.myworkdayjobs.com|lateral-us", adapterType: "workday", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
   { id: "co-intuit", category: "company", name: "Intuit", identifier: "co-intuit", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
