@@ -54,6 +54,16 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "co-bofa", category: "company", name: "Bank of America", identifier: "ghr.wd1.myworkdayjobs.com|lateral-us", adapterType: "workday", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
   { id: "co-intuit", category: "company", name: "Intuit", identifier: "co-intuit", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
   { id: "co-blackrock", category: "company", name: "Blackrock", identifier: "co-blackrock", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
+  // HSBC: mycareer.hsbc.com/en_GB/external/SearchJobs is the same Radancy/TalentBrew platform
+  // as Two Sigma/Intuit/Blackrock above, themed with "pipeline" terminology instead of "job" —
+  // see lib/adapters/html/hsbc.ts.
+  { id: "co-hsbc", category: "company", name: "HSBC", identifier: "co-hsbc", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
+  // Cisco: careers.cisco.com is on Phenom People, same embedded `phApp.ddo` pattern as
+  // BCG/eBay — see lib/adapters/html/phenom.ts. ~1,170 jobs globally, US + APAC confirmed.
+  { id: "co-cisco", category: "company", name: "Cisco", identifier: "co-cisco", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Software", group: "Software" },
+  // eBay: jobs.ebayinc.com is also Phenom People — see lib/adapters/html/phenom.ts.
+  // ~466 jobs confirmed via plain curl.
+  { id: "co-ebay", category: "company", name: "Ebay", identifier: "co-ebay", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "E-Commerce", group: "E-Commerce" },
   // Sea Group's own recruiting API (ats.workatsea.com), scoped to Thailand — see lib/adapters/shopee.ts.
   { id: "co-shopee", category: "company", name: "Shopee", identifier: "shopee", adapterType: "custom-shopee", enabled: true, isDefault: true, industry: "E-Commerce", group: "E-Commerce" },
   // careers.lmwn.com server-renders its listing — see lib/adapters/html/linemanwongnai.ts.
@@ -79,12 +89,6 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "co-optiver", category: "company", name: "Optiver", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
   { id: "co-imc", category: "company", name: "IMC Trading", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
   { id: "co-sig", category: "company", name: "Susquehanna International Group", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
-  // Cisco: on Phenom People (cdn.phenompeople.com) — the same platform as eBay below. Its
-  // /api/apply/v2/jobs endpoint is real and public, but every "org" tenant-id guess derived
-  // from the CDN asset path ("CISCISGLOBAL") returns "Tenant not identified"; the correct
-  // param name/value wasn't found without capturing live network traffic against this
-  // specific tenant.
-  { id: "co-cisco", category: "company", name: "Cisco", identifier: "https://jobs.cisco.com/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Software", group: "Software" },
   // Uber: the 406 on a bare curl is just strict Accept-header negotiation, not bot-blocking
   // (adding `Accept: text/html` gets a normal 200) — but the resulting page is a client-only
   // SPA with no job data or API endpoint discoverable in the static HTML.
@@ -94,10 +98,6 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // career site. It's a Next.js-shaped custom app; no server-rendered listing or public API
   // endpoint was found.
   { id: "co-apple", category: "company", name: "Apple", identifier: "https://jobs.apple.com/en-us/search", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Big Tech", group: "Big Tech" },
-  // HSBC: runs on Avature (`avature.wizard` config in the page) — a new ATS family for this
-  // project. The search page is a form/wizard shell; the actual results URL convention wasn't
-  // found without driving the wizard in a real browser.
-  { id: "co-hsbc", category: "company", name: "HSBC", identifier: "https://mycareer.hsbc.com/en_GB/external", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
   // Goldman Sachs: custom Next.js app ("Higher") with an Apollo/GraphQL client — confirmed via
   // `__NEXT_DATA__`, whose `initialApolloState` ships empty, so job data loads entirely
   // client-side after JS boot. Not bot-blocked, just genuinely needs a browser.
@@ -112,12 +112,6 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "co-visa", category: "company", name: "Visa", identifier: "https://usa.visa.com/careers.html", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
   { id: "co-servicenow", category: "company", name: "Service Now", identifier: "https://careers.servicenow.com/jobs/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Software", group: "Software" },
   { id: "co-twitter", category: "company", name: "X (Twitter)", identifier: "https://careers.x.com/en", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Media", group: "Media and Entertainment" },
-  // eBay: moved domains (jobs.ebaycareers.com now 301s here) — also on Phenom People, same
-  // platform as Cisco above, and hits the same "Tenant not identified" wall on the guessed
-  // /api/apply/v2/jobs params. Per-location pages (e.g. /us/en/jobs-in-california) DO
-  // server-render real listings, confirmed via plain curl — but there's no single unified
-  // "all jobs" feed, only ~30 separate per-location pages, each needing its own pagination.
-  { id: "co-ebay", category: "company", name: "Ebay", identifier: "https://jobs.ebayinc.com/us/en/jobs-by-location", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "E-Commerce", group: "E-Commerce" },
   // Tesla: the real jobs endpoint (tesla.com/cua-api/apps/careers/state, found by watching
   // network traffic in a real browser session, where it renders fine) returns Akamai's
   // "Access Denied" page when hit directly — Akamai Bot Manager, confirmed via response body
@@ -189,10 +183,12 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // --- Private Equity: added as placeholders, career sites not yet investigated. Mix of major
   // US firms and firms with a strong Southeast Asia presence.
   { id: "co-lakeshorecapital", category: "company", name: "Lakeshore Capital", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
+  // Blackstone: active Cloudflare bot-block (cf-mitigated: challenge), not attempted further.
   { id: "co-blackstone", category: "company", name: "Blackstone", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
-  { id: "co-kkr", category: "company", name: "KKR", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
+  { id: "co-kkr", category: "company", name: "KKR", identifier: "stage", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Private Equity" },
+  // Carlyle Group: active Cloudflare bot-block ("Attention Required!" page), not attempted further.
   { id: "co-carlylegroup", category: "company", name: "Carlyle Group", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
-  { id: "co-tpg", category: "company", name: "TPG", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
+  { id: "co-tpg", category: "company", name: "TPG", identifier: "tpgcareers", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Private Equity" },
   { id: "co-warburgpincus", category: "company", name: "Warburg Pincus", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
   { id: "co-affinityequity", category: "company", name: "Affinity Equity Partners", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },
   { id: "co-northstargroup", category: "company", name: "Northstar Group", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Private Equity" },

@@ -55,16 +55,17 @@ open roles are a separate, working source — see the table below.)
 
 | Company | Adapter | Status |
 |---|---|---|
-| Airbnb, SoFi, Stripe, Adyen, Chime, Binance, Robinhood, Anthropic, Lyft, Figma, Datadog, Quince, LinkedIn (their own careers, not the job-board platform) | Greenhouse | ✅ working |
+| Airbnb, SoFi, Stripe, Adyen, Chime, Binance, Robinhood, Anthropic, Lyft, Figma, Datadog, Quince, LinkedIn (their own careers, not the job-board platform), TPG, KKR | Greenhouse | ✅ working |
 | Spotify | Lever | ✅ working |
 | Column, Air Wallex, Ramp, OpenAI, Handshake (their own careers, not the job-board platform), Mercor | Ashby | ✅ working |
 | Adobe, Capital One, Expedia, NVIDIA, Bank of America | Workday | ✅ working |
 | Amazon / AWS | Amazon's own API | ✅ working |
 | JPMorgan | Oracle Fusion Recruiting Cloud's public REST API | ✅ working |
 | Google, Two Sigma, LINE MAN Wongnai (covers LINE MAN, Wongnai, LINE Pay Thailand) | Server-rendered HTML/hydration state, parsed directly (no browser needed — confirmed via plain `curl`) | ✅ working |
-| Intuit, BlackRock | Radancy/TalentBrew career-site platform (same family as Two Sigma above, different theme per company) — server-renders its full paginated listing, parsed with `cheerio` | ✅ working |
+| Intuit, BlackRock, HSBC | Radancy/TalentBrew career-site platform (same family as Two Sigma above, different theme per company — HSBC's variant uses "pipeline" terminology instead of "job") — server-renders its full paginated listing, parsed with `cheerio` | ✅ working |
 | Shopee | Sea Group's own recruiting API (`ats.workatsea.com`), public and unauthenticated. Scoped to Thailand rather than pulling all ~2,600 jobs across every Sea Group market — see `lib/adapters/shopee.ts`. | ✅ working |
-| BCG | Phenom People, but embeds its full result set as a server-rendered JSON blob (`phApp.ddo = {...}`) rather than needing the tenant-guessing that blocked Cisco/eBay below. Global listing, confirmed Singapore/Vietnam/Philippines/Indonesia/Malaysia postings — see `lib/adapters/html/bcg.ts`. | ✅ working, disabled by default |
+| BCG | Phenom People, but embeds its full result set as a server-rendered JSON blob (`phApp.ddo = {...}`) rather than needing tenant-guessing. Global listing, confirmed Singapore/Vietnam/Philippines/Indonesia/Malaysia postings — see `lib/adapters/html/bcg.ts`. | ✅ working, disabled by default |
+| Cisco, eBay | Same Phenom People `phApp.ddo` pattern as BCG above — shared fetch/parse logic in `lib/adapters/html/phenom.ts`. Cisco confirmed ~1,170 jobs globally (US + APAC); eBay confirmed ~466 jobs. | ✅ working |
 | Deloitte, PwC (US portion), KPMG (US portion) | Radancy/TalentBrew (same family as Two Sigma/Intuit/BlackRock above) — server-renders its full listing. US-only; other member firms run on separate country sites. | ✅ working, disabled by default |
 | Accenture | Workday (`accenture.wd103.myworkdayjobs.com`) — generic adapter, confirmed real Singapore results | ✅ working, disabled by default |
 | PwC (APAC portion) | PwC's global Workday tenant (`pwc.wd3.myworkdayjobs.com`), searched for "Singapore"/"Bangkok" rather than pulling all ~4,500 jobs worldwide — merged with the US Radancy source above, see `lib/adapters/html/pwc.ts`. | ✅ working, disabled by default |
@@ -79,15 +80,15 @@ open roles are a separate, working source — see the table below.)
 | Lazada | — | The real job-search backend (`aidc-jobs.alibaba.com`, Alibaba Group's shared international recruiting platform) loads Alibaba's "Baxia" anti-bot script and requires a `getSecurityId` token before the job API responds. Same policy as Agoda/Citadel/Microsoft/Tesla: not building around active bot-mitigation. |
 | Tesla | — | Found the real endpoint (`tesla.com/cua-api/apps/careers/state`) by watching network traffic in a real browser — renders fine there. Hitting it directly gets Akamai Bot Manager's "Access Denied" page. Same enforcement category as Agoda/Citadel/Microsoft, different vendor. |
 | Line (LY Corp) | — | Not bot-blocked — runs on Gatsby + a Strapi-backed API — but the real job-listing endpoint wasn't found in a quick pass (the directly-fetchable `page-data.json` files only contain footer/nav content, not listings). Worth a proper look, not yet done. |
-| Cisco, eBay | — | Both on Phenom People (`cdn.phenompeople.com`). The public `/api/apply/v2/jobs` endpoint is real, but every tenant-id guess derived from CDN asset paths returns "Tenant not identified" — the correct param wasn't found without live network capture against these specific tenants. eBay also has per-location pages (e.g. `/us/en/jobs-in-california`) that genuinely server-render, but there's no single unified feed, only ~30 separate location pages. |
-| HSBC | — | Runs on Avature — a new ATS family for this project. The search page is a form/wizard shell; the results-page URL convention wasn't found without driving the wizard in a real browser. |
 | Goldman Sachs | — | Custom Next.js app ("Higher") with an Apollo/GraphQL client — confirmed via `__NEXT_DATA__`, whose `initialApolloState` ships empty. Not bot-blocked, just genuinely client-rendered. |
 | Uber, Apple | — | Uber's 406 is just strict Accept-header negotiation (not bot-blocking), but the real page is a client-only SPA with no discoverable API. Apple's "Workday" references are a false positive (internal HR copy, not its career site); it's a custom Next.js-shaped app with no server-rendered listing found. |
 | McKinsey | — | The TLS/HTTP2 handshake completes but the server resets the stream (`INTERNAL_ERROR`) for a non-browser client, on both HTTP/2 and HTTP/1.1 — TLS/protocol-fingerprint-based bot blocking, same enforcement category as Microsoft. |
 | Bain, Kearney | — | Cloudflare mitigation — Bain's response carries an explicit `cf-mitigated: challenge` header; Kearney serves a captcha challenge page. Same policy as Agoda/Citadel/DoorDash/Canva. |
 | L.E.K. Consulting | — | Runs on Oleeo/TalentLink (`lek.tal.net`) — individual job pages are gated behind an ALTCHA proof-of-work captcha ("Quick Check Needed... confirm you're a real person"), confirmed via plain curl. Active bot-mitigation, not attempting a bypass. |
+| Blackstone | — | Cloudflare mitigation — `cf-mitigated: challenge` header on every request. Same policy as Bain/Kearney above. |
+| Carlyle Group | — | Cloudflare "Attention Required!" block page on every request. Same policy as Bain/Kearney above. |
 
-39 of 82 default company sources are live and working; the rest are visible but disabled on
+44 of 82 default company sources are live and working; the rest are visible but disabled on
 `/sources` with the specific reason noted above rather than a generic "not yet supported."
 
 All 10 consulting firms (McKinsey, Bain, BCG, Deloitte, Accenture, PwC, EY, Kearney, L.E.K.,
@@ -97,12 +98,18 @@ testing) and 4 are genuinely bot-mitigated. Every consulting source ships `enabl
 default regardless of adapter status — unlike every other group on `/sources`, "adapter ready"
 here doesn't mean "on by default." Toggle them on by hand if you want them scanned.
 
-Two other groups are placeholders only — added to the source list and grouped, but their
-career sites haven't been investigated yet, so they're not in the table above:
-- 7 more quant trading firms: Jane Street, DRW, Jump Trading, Hudson River Trading, Optiver,
-  IMC Trading, Susquehanna International Group (SIG)
-- 10 private equity firms: Lakeshore Capital, Blackstone, KKR, Carlyle Group, TPG, Warburg
-  Pincus, Affinity Equity Partners, Northstar Group, Creador, Navis Capital Partners
+Two other groups were added as placeholders and are now partially investigated:
+- 7 quant trading firms (Jane Street, DRW, Jump Trading, Hudson River Trading, Optiver, IMC
+  Trading, Susquehanna International Group/SIG) were checked — none came back with a working
+  adapter. Jump Trading and IMC Trading's initial "Greenhouse"/"iCIMS" keyword hits turned out
+  to be false positives from a stale shared probe file; SIG's iCIMS hit was real, but its jobs
+  page is client-rendered with no embedded data. All 7 remain placeholders.
+- 10 private equity firms (Lakeshore Capital, Blackstone, KKR, Carlyle Group, TPG, Warburg
+  Pincus, Affinity Equity Partners, Northstar Group, Creador, Navis Capital Partners) were
+  checked — KKR and TPG came back working (both on Greenhouse; KKR's board token is literally
+  "stage", confirmed genuine via its `absolute_url` postings), Blackstone and Carlyle Group are
+  actively Cloudflare-blocked (see table above), and the remaining 6 are still placeholders —
+  no working adapter found yet.
 
 ## Getting started
 
