@@ -7,6 +7,7 @@ import type { ScanSource } from "./types";
  * - workday: `{host}|{siteSlug}` e.g. `adobe.wd5.myworkdayjobs.com|external_experienced`
  * - ashby: board name (api.ashbyhq.com/posting-api/job-board/{board})
  * - oracle-fusion: `{tenant}|{siteNumber}` e.g. `jpmc|CX_1001`
+ * - smartrecruiters: company slug (api.smartrecruiters.com/v1/companies/{slug}/postings)
  * - html-scrape: unused here — dispatched by source.id, see lib/adapters/html/index.ts
  * - custom-amazon: unused, adapter is hardcoded to amazon.jobs
  * - unimplemented: the company's career site URL, kept for reference / future wiring
@@ -36,6 +37,11 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "co-stripe", category: "company", name: "Stripe", identifier: "stripe", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech" },
   { id: "co-adyen", category: "company", name: "Adyen", identifier: "adyen", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech" },
   { id: "co-chime", category: "company", name: "Chime", identifier: "chime", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech" },
+  // Wise: SmartRecruiters' public postings API — see lib/adapters/smartrecruiters.ts. The
+  // wise.jobs career site itself runs a themed "SmartRecruiters Attrax" CMS shell, but the
+  // underlying company slug ("Wise") works directly against the generic public API. Confirmed
+  // real Singapore-tagged postings among ~426 total.
+  { id: "co-wise", category: "company", name: "Wise", identifier: "Wise", adapterType: "smartrecruiters", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech" },
   { id: "co-binance", category: "company", name: "Binance", identifier: "binance", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
   { id: "co-robinhood", category: "company", name: "Robinhood", identifier: "robinhood", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech" },
   { id: "co-openai", category: "company", name: "OpenAI", identifier: "openai", adapterType: "ashby", enabled: true, isDefault: true, industry: "AI", group: "AI" },
@@ -45,6 +51,13 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "co-lyft", category: "company", name: "Lyft", identifier: "lyft", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Travel", group: "Travel and Ride Share" },
   { id: "co-figma", category: "company", name: "Figma", identifier: "figma", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Software", group: "Software" },
   { id: "co-datadog", category: "company", name: "Datadog", identifier: "datadog", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Software", group: "Software" },
+  { id: "co-razer", category: "company", name: "Razer", identifier: "razer.wd3.myworkdayjobs.com|Careers", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software" },
+  // Snowflake's career site is a Phenom People skin, but its jobs are actually hosted on
+  // Ashby (its embedded phApp.ddo blob's applyUrl fields point to jobs.ashbyhq.com/snowflake)
+  // — hits the generic Ashby adapter directly, no bespoke scraping needed. Confirmed real
+  // Singapore-tagged postings among ~392 total.
+  { id: "co-snowflake", category: "company", name: "Snowflake", identifier: "snowflake", adapterType: "ashby", enabled: true, isDefault: true, industry: "Software", group: "Software" },
+  { id: "co-paloalto", category: "company", name: "Palo Alto Networks", identifier: "paloaltonetworks.wd5.myworkdayjobs.com|panwexternalcareers", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software" },
   { id: "co-quince", category: "company", name: "Quince", identifier: "quince", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "E-Commerce", group: "E-Commerce" },
   // LinkedIn's own careers page (Greenhouse) — separate from the "LinkedIn" social source
   // above, which represents scanning LinkedIn-the-job-board-platform (not automatable).
@@ -64,6 +77,10 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // eBay: jobs.ebayinc.com is also Phenom People — see lib/adapters/html/phenom.ts.
   // ~466 jobs confirmed via plain curl.
   { id: "co-ebay", category: "company", name: "Ebay", identifier: "co-ebay", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "E-Commerce", group: "E-Commerce" },
+  // SAP: jobs.sap.com runs its own SuccessFactors Career Site Builder — same template as EY
+  // above. Scoped to US/Singapore/Thailand — see lib/adapters/html/sap.ts and the shared
+  // lib/adapters/html/successfactors.ts helper.
+  { id: "co-sap", category: "company", name: "SAP", identifier: "co-sap", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Software", group: "Software" },
   // Sea Group's own recruiting API (ats.workatsea.com), scoped to Thailand — see lib/adapters/shopee.ts.
   { id: "co-shopee", category: "company", name: "Shopee", identifier: "shopee", adapterType: "custom-shopee", enabled: true, isDefault: true, industry: "E-Commerce", group: "E-Commerce" },
   // careers.lmwn.com server-renders its listing — see lib/adapters/html/linemanwongnai.ts.

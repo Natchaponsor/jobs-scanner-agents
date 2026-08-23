@@ -12,6 +12,7 @@ import { kpmgAdapter } from "./kpmg";
 import { ciscoAdapter } from "./cisco";
 import { ebayAdapter } from "./ebay";
 import { hsbcAdapter } from "./hsbc";
+import { sapAdapter } from "./sap";
 
 /**
  * HTML structure isn't standardized like an ATS API, so each company gets its own parser.
@@ -31,6 +32,7 @@ const HTML_SCRAPERS: Record<string, Adapter> = {
   "co-cisco": ciscoAdapter,
   "co-ebay": ebayAdapter,
   "co-hsbc": hsbcAdapter,
+  "co-sap": sapAdapter,
 };
 
 export const htmlScrapeAdapter: Adapter = {

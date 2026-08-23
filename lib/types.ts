@@ -38,6 +38,7 @@ export type AdapterType =
   | "eightfold"
   | "ashby"
   | "oracle-fusion"
+  | "smartrecruiters"
   | "html-scrape"
   | "custom-amazon"
   | "custom-shopee"
@@ -53,6 +54,7 @@ export const WORKING_ADAPTER_TYPES: AdapterType[] = [
   "eightfold",
   "ashby",
   "oracle-fusion",
+  "smartrecruiters",
   "html-scrape",
   "custom-amazon",
   "custom-shopee",

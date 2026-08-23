@@ -6,6 +6,7 @@ import { workdayAdapter } from "./workday";
 import { eightfoldAdapter } from "./eightfold";
 import { ashbyAdapter } from "./ashby";
 import { oracleFusionAdapter } from "./oracle-fusion";
+import { smartRecruitersAdapter } from "./smartrecruiters";
 import { htmlScrapeAdapter } from "./html";
 import { amazonAdapter } from "./amazon";
 import { shopeeAdapter } from "./shopee";
@@ -18,6 +19,7 @@ export const ADAPTERS: Record<AdapterType, Adapter> = {
   eightfold: eightfoldAdapter,
   ashby: ashbyAdapter,
   "oracle-fusion": oracleFusionAdapter,
+  smartrecruiters: smartRecruitersAdapter,
   "html-scrape": htmlScrapeAdapter,
   "custom-amazon": amazonAdapter,
   "custom-shopee": shopeeAdapter,

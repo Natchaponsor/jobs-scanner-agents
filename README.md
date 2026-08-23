@@ -57,10 +57,11 @@ open roles are a separate, working source — see the table below.)
 |---|---|---|
 | Airbnb, SoFi, Stripe, Adyen, Chime, Binance, Robinhood, Anthropic, Lyft, Figma, Datadog, Quince, LinkedIn (their own careers, not the job-board platform), TPG, KKR | Greenhouse | ✅ working |
 | Spotify | Lever | ✅ working |
-| Column, Air Wallex, Ramp, OpenAI, Handshake (their own careers, not the job-board platform), Mercor | Ashby | ✅ working |
-| Adobe, Capital One, Expedia, NVIDIA, Bank of America | Workday | ✅ working |
+| Column, Air Wallex, Ramp, OpenAI, Handshake (their own careers, not the job-board platform), Mercor, Snowflake (career site is a Phenom People skin, but its `applyUrl` fields point straight at `jobs.ashbyhq.com/snowflake` — hits the generic adapter directly) | Ashby | ✅ working |
+| Adobe, Capital One, Expedia, NVIDIA, Bank of America, Razer, Palo Alto Networks | Workday | ✅ working |
 | Amazon / AWS | Amazon's own API | ✅ working |
 | JPMorgan | Oracle Fusion Recruiting Cloud's public REST API | ✅ working |
+| Wise | SmartRecruiters' public, unauthenticated postings API (`api.smartrecruiters.com/v1/companies/{slug}/postings`) — new generic adapter type, reusable for any company on SmartRecruiters, not just Wise. Confirmed real Singapore-tagged postings among ~426 total. | ✅ working |
 | Google, Two Sigma, LINE MAN Wongnai (covers LINE MAN, Wongnai, LINE Pay Thailand) | Server-rendered HTML/hydration state, parsed directly (no browser needed — confirmed via plain `curl`) | ✅ working |
 | Intuit, BlackRock, HSBC | Radancy/TalentBrew career-site platform (same family as Two Sigma above, different theme per company — HSBC's variant uses "pipeline" terminology instead of "job") — server-renders its full paginated listing, parsed with `cheerio` | ✅ working |
 | Shopee | Sea Group's own recruiting API (`ats.workatsea.com`), public and unauthenticated. Scoped to Thailand rather than pulling all ~2,600 jobs across every Sea Group market — see `lib/adapters/shopee.ts`. | ✅ working |
@@ -69,7 +70,8 @@ open roles are a separate, working source — see the table below.)
 | Deloitte, PwC (US portion), KPMG (US portion) | Radancy/TalentBrew (same family as Two Sigma/Intuit/BlackRock above) — server-renders its full listing. US-only; other member firms run on separate country sites. | ✅ working, disabled by default |
 | Accenture | Workday (`accenture.wd103.myworkdayjobs.com`) — generic adapter, confirmed real Singapore results | ✅ working, disabled by default |
 | PwC (APAC portion) | PwC's global Workday tenant (`pwc.wd3.myworkdayjobs.com`), searched for "Singapore"/"Bangkok" rather than pulling all ~4,500 jobs worldwide — merged with the US Radancy source above, see `lib/adapters/html/pwc.ts`. | ✅ working, disabled by default |
-| EY | SAP SuccessFactors Career Site Builder — server-renders its full listing. Global site lists ~7,300 jobs; scoped via `locationsearch` to United States/Singapore/Thailand, all three confirmed with real matches — see `lib/adapters/html/ey.ts`. | ✅ working, disabled by default |
+| EY | SAP SuccessFactors Career Site Builder (same template as SAP's own career site below) — server-renders its full listing. Global site lists ~7,300 jobs; scoped via `locationsearch` to United States/Singapore/Thailand, all three confirmed with real matches — see `lib/adapters/html/ey.ts` and the shared `lib/adapters/html/successfactors.ts` helper. | ✅ working, disabled by default |
+| SAP | Its own SuccessFactors Career Site Builder site (`jobs.sap.com`) — same template and shared helper as EY above. ~925 jobs globally; scoped to United States/Singapore/Thailand, confirmed 23 Singapore- and 4 Thailand-tagged postings — see `lib/adapters/html/sap.ts`. | ✅ working |
 | KPMG (Thailand portion) | Adobe Experience Manager — job postings are individual content pages listed directly on the Thailand "Experienced Hires" page, not run through a separate ATS — merged with the US Radancy source above, see `lib/adapters/html/kpmg.ts`. | ✅ working, disabled by default |
 | Netflix | Eightfold | ⚠️ adapter present, disabled by default — endpoint returned a bot-protection page during testing |
 | TikTok/ByteDance | — | Client-side rendered with no exposed API. The one case that's genuinely just "needs a real browser" (not bot-mitigated) — would need a Playwright adapter, which is a real new dependency (~300MB Chromium), so it's flagged rather than added speculatively. |
@@ -88,7 +90,7 @@ open roles are a separate, working source — see the table below.)
 | Blackstone | — | Cloudflare mitigation — `cf-mitigated: challenge` header on every request. Same policy as Bain/Kearney above. |
 | Carlyle Group | — | Cloudflare "Attention Required!" block page on every request. Same policy as Bain/Kearney above. |
 
-44 of 82 default company sources are live and working; the rest are visible but disabled on
+49 of 87 default company sources are live and working; the rest are visible but disabled on
 `/sources` with the specific reason noted above rather than a generic "not yet supported."
 
 All 10 consulting firms (McKinsey, Bain, BCG, Deloitte, Accenture, PwC, EY, Kearney, L.E.K.,
