@@ -55,14 +55,15 @@ open roles are a separate, working source — see the table below.)
 
 | Company | Adapter | Status |
 |---|---|---|
-| Airbnb, SoFi, Stripe, Adyen, Chime, Binance, Robinhood, Anthropic, Lyft, Figma, Datadog, Quince, LinkedIn (their own careers, not the job-board platform), TPG, KKR | Greenhouse | ✅ working |
+| Airbnb, SoFi, Stripe, Adyen, Chime, Binance, Robinhood, Anthropic, Lyft, Figma, Datadog, Quince, LinkedIn (their own careers, not the job-board platform), TPG, KKR, DRW (board token isn't in the server-rendered HTML — found it inside DRW's own Next.js JS bundle after its CSP header tipped off that it was on Greenhouse at all), Asana, Postman | Greenhouse | ✅ working |
 | Spotify, Coda Payments, Nium | Lever | ✅ working |
-| Column, Air Wallex, Ramp, OpenAI, Handshake (their own careers, not the job-board platform), Mercor, Snowflake (career site is a Phenom People skin, but its `applyUrl` fields point straight at `jobs.ashbyhq.com/snowflake` — hits the generic adapter directly) | Ashby | ✅ working |
+| Column, Air Wallex, Ramp, OpenAI, Handshake (their own careers, not the job-board platform), Mercor, Snowflake (career site is a Phenom People skin, but its `applyUrl` fields point straight at `jobs.ashbyhq.com/snowflake` — hits the generic adapter directly), Linear | Ashby | ✅ working |
 | Adobe, Capital One, Expedia, NVIDIA, Bank of America, Razer, Palo Alto Networks, Trend Micro, PropertyGuru | Workday | ✅ working |
 | Amazon / AWS | Amazon's own API | ✅ working |
 | JPMorgan | Oracle Fusion Recruiting Cloud's public REST API | ✅ working |
 | Wise | SmartRecruiters' public, unauthenticated postings API (`api.smartrecruiters.com/v1/companies/{slug}/postings`) — new generic adapter type, reusable for any company on SmartRecruiters, not just Wise. Confirmed real Singapore-tagged postings among ~426 total. | ✅ working |
 | Google, Two Sigma, LINE MAN Wongnai (covers LINE MAN, Wongnai, LINE Pay Thailand) | Server-rendered HTML/hydration state, parsed directly (no browser needed — confirmed via plain `curl`) | ✅ working |
+| Optiver | Not a recognizable ATS — a custom React site with a genuine public JSON API (`www.optiver.com/en/api/v1/jobs`) embedded as hydration state in the server-rendered page. Capped at 16 results per query with no working pagination param found (tried skip/offset/limit/page/take/size/count/top), but its `location` filter genuinely scopes server-side, so querying each of its own listed office locations captures the full dataset (confirmed by summing each location's count back up to the unfiltered total) — see `lib/adapters/html/optiver.ts`. Confirmed 6 Singapore-tagged postings, fully captured. | ✅ working |
 | Intuit, BlackRock, HSBC | Radancy/TalentBrew career-site platform (same family as Two Sigma above, different theme per company — HSBC's variant uses "pipeline" terminology instead of "job") — server-renders its full paginated listing, parsed with `cheerio` | ✅ working |
 | Shopee | Sea Group's own recruiting API (`ats.workatsea.com`), public and unauthenticated. Scoped to Thailand rather than pulling all ~2,600 jobs across every Sea Group market — see `lib/adapters/shopee.ts`. | ✅ working |
 | BCG | Phenom People, but embeds its full result set as a server-rendered JSON blob (`phApp.ddo = {...}`) rather than needing tenant-guessing. Global listing, confirmed Singapore/Vietnam/Philippines/Indonesia/Malaysia postings — see `lib/adapters/html/bcg.ts`. | ✅ working, disabled by default |
@@ -90,7 +91,7 @@ open roles are a separate, working source — see the table below.)
 | Blackstone | — | Cloudflare mitigation — `cf-mitigated: challenge` header on every request. Same policy as Bain/Kearney above. |
 | Carlyle Group | — | Cloudflare "Attention Required!" block page on every request. Same policy as Bain/Kearney above. |
 
-54 of 92 default company sources are live and working; the rest are visible but disabled on
+59 of 95 default company sources are live and working; the rest are visible but disabled on
 `/sources` with the specific reason noted above rather than a generic "not yet supported."
 
 All 10 consulting firms (McKinsey, Bain, BCG, Deloitte, Accenture, PwC, EY, Kearney, L.E.K.,
@@ -102,10 +103,12 @@ here doesn't mean "on by default." Toggle them on by hand if you want them scann
 
 Two other groups were added as placeholders and are now partially investigated:
 - 7 quant trading firms (Jane Street, DRW, Jump Trading, Hudson River Trading, Optiver, IMC
-  Trading, Susquehanna International Group/SIG) were checked — none came back with a working
-  adapter. Jump Trading and IMC Trading's initial "Greenhouse"/"iCIMS" keyword hits turned out
-  to be false positives from a stale shared probe file; SIG's iCIMS hit was real, but its jobs
-  page is client-rendered with no embedded data. All 7 remain placeholders.
+  Trading, Susquehanna International Group/SIG) were checked — DRW and Optiver came back
+  working (see the Greenhouse and Optiver rows above), Jump Trading and IMC Trading's initial
+  "Greenhouse"/"iCIMS" keyword hits turned out to be false positives from a stale shared probe
+  file, SIG's iCIMS hit was real but its jobs page is client-rendered with no embedded data, and
+  Jane Street and Hudson River Trading remain placeholders (Hudson River Trading's only
+  Greenhouse board turned out to be a talent-community signup form, not real postings).
 - 10 private equity firms (Lakeshore Capital, Blackstone, KKR, Carlyle Group, TPG, Warburg
   Pincus, Affinity Equity Partners, Northstar Group, Creador, Navis Capital Partners) were
   checked — KKR and TPG came back working (both on Greenhouse; KKR's board token is literally

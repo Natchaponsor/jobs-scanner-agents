@@ -58,6 +58,9 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "co-lyft", category: "company", name: "Lyft", identifier: "lyft", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Travel", group: "Travel and Ride Share" },
   { id: "co-figma", category: "company", name: "Figma", identifier: "figma", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Software", group: "Software" },
   { id: "co-datadog", category: "company", name: "Datadog", identifier: "datadog", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Software", group: "Software" },
+  { id: "co-asana", category: "company", name: "Asana", identifier: "asana", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Software", group: "Software" },
+  { id: "co-postman", category: "company", name: "Postman", identifier: "postman", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Software", group: "Software" },
+  { id: "co-linear", category: "company", name: "Linear", identifier: "Linear", adapterType: "ashby", enabled: true, isDefault: true, industry: "Software", group: "Software" },
   { id: "co-razer", category: "company", name: "Razer", identifier: "razer.wd3.myworkdayjobs.com|Careers", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software" },
   // Snowflake's career site is a Phenom People skin, but its jobs are actually hosted on
   // Ashby (its embedded phApp.ddo blob's applyUrl fields point to jobs.ashbyhq.com/snowflake)
@@ -114,10 +117,20 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "co-citadel", category: "company", name: "Citadel", identifier: "https://www.citadel.com/careers/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
   // More quant trading firms — added as placeholders, career sites not yet investigated.
   { id: "co-janestreet", category: "company", name: "Jane Street", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
-  { id: "co-drw", category: "company", name: "DRW", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
+  // DRW: Greenhouse — the CSP header on drw.com explicitly whitelists boards-api.greenhouse.io,
+  // but the board token isn't in the server-rendered HTML (client-fetched); found the real
+  // token ("drweng") inside DRW's own Next.js JS bundle. 164 jobs, confirmed 13 Singapore-
+  // tagged postings. (DRW also runs a smaller "drwfr" board for Montreal/French postings, not
+  // used here.)
+  { id: "co-drw", category: "company", name: "DRW", identifier: "drweng", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
   { id: "co-jumptrading", category: "company", name: "Jump Trading", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
   { id: "co-hudsonrivertrading", category: "company", name: "Hudson River Trading", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
-  { id: "co-optiver", category: "company", name: "Optiver", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
+  // Optiver: not a recognizable ATS — a custom React site with a genuine public JSON API
+  // (www.optiver.com/en/api/v1/jobs) embedded as hydration state in the server-rendered page.
+  // Capped at 16 results per query with no working pagination param found, but the `location`
+  // filter genuinely scopes server-side — see lib/adapters/html/optiver.ts. Confirmed 6
+  // Singapore-tagged postings (fully captured, under the 16-item cap).
+  { id: "co-optiver", category: "company", name: "Optiver", identifier: "co-optiver", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
   { id: "co-imc", category: "company", name: "IMC Trading", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
   { id: "co-sig", category: "company", name: "Susquehanna International Group", identifier: "not yet investigated", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
   // Uber: the 406 on a bare curl is just strict Accept-header negotiation, not bot-blocking
