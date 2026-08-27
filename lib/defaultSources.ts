@@ -49,7 +49,18 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // Nium: Lever, board token "nium" — confirmed real Singapore- and Kuala Lumpur-tagged
   // postings.
   { id: "co-nium", category: "company", name: "Nium", identifier: "nium", adapterType: "lever", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech" },
+  { id: "co-monzo", category: "company", name: "Monzo", identifier: "monzo", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech" },
+  { id: "co-n26", category: "company", name: "N26", identifier: "n26", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech" },
   { id: "co-binance", category: "company", name: "Binance", identifier: "binance", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
+  { id: "co-gemini", category: "company", name: "Gemini", identifier: "gemini", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
+  // Kraken: Ashby — the board name isn't the literal company name ("kraken"), which returns an
+  // empty jobs array; the real board is "kraken.com" (found in the site's own outbound links to
+  // jobs.ashbyhq.com). 91 jobs, confirmed real Singapore-tagged postings.
+  { id: "co-kraken", category: "company", name: "Kraken", identifier: "kraken.com", adapterType: "ashby", enabled: true, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
+  // Circle: careers.circle.com is on Phenom People, same embedded `phApp.ddo` pattern as BCG/
+  // Cisco/eBay/AirAsia above — see lib/adapters/html/phenom.ts and
+  // lib/adapters/html/circle.ts. ~61 jobs, confirmed real Singapore-tagged postings.
+  { id: "co-circle", category: "company", name: "Circle", identifier: "co-circle", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Finance", group: "Quant, Hedge Funds & Crypto" },
   { id: "co-robinhood", category: "company", name: "Robinhood", identifier: "robinhood", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech" },
   { id: "co-openai", category: "company", name: "OpenAI", identifier: "openai", adapterType: "ashby", enabled: true, isDefault: true, industry: "AI", group: "AI" },
   { id: "co-anthropic", category: "company", name: "Anthropic", identifier: "anthropic", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "AI", group: "AI" },

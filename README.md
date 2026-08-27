@@ -55,9 +55,9 @@ open roles are a separate, working source — see the table below.)
 
 | Company | Adapter | Status |
 |---|---|---|
-| Airbnb, SoFi, Stripe, Adyen, Chime, Binance, Robinhood, Anthropic, Lyft, Figma, Datadog, Quince, LinkedIn (their own careers, not the job-board platform), TPG, KKR, DRW (board token isn't in the server-rendered HTML — found it inside DRW's own Next.js JS bundle after its CSP header tipped off that it was on Greenhouse at all), Asana, Postman | Greenhouse | ✅ working |
+| Airbnb, SoFi, Stripe, Adyen, Chime, Binance, Robinhood, Anthropic, Lyft, Figma, Datadog, Quince, LinkedIn (their own careers, not the job-board platform), TPG, KKR, DRW (board token isn't in the server-rendered HTML — found it inside DRW's own Next.js JS bundle after its CSP header tipped off that it was on Greenhouse at all), Asana, Postman, Gemini, Monzo, N26 | Greenhouse | ✅ working |
 | Spotify, Coda Payments, Nium | Lever | ✅ working |
-| Column, Air Wallex, Ramp, OpenAI, Handshake (their own careers, not the job-board platform), Mercor, Snowflake (career site is a Phenom People skin, but its `applyUrl` fields point straight at `jobs.ashbyhq.com/snowflake` — hits the generic adapter directly), Linear | Ashby | ✅ working |
+| Column, Air Wallex, Ramp, OpenAI, Handshake (their own careers, not the job-board platform), Mercor, Snowflake (career site is a Phenom People skin, but its `applyUrl` fields point straight at `jobs.ashbyhq.com/snowflake` — hits the generic adapter directly), Linear, Kraken (board name isn't the literal company name — "kraken" returns an empty jobs array; the real board is "kraken.com", found in the site's own outbound links) | Ashby | ✅ working |
 | Adobe, Capital One, Expedia, NVIDIA, Bank of America, Razer, Palo Alto Networks, Trend Micro, PropertyGuru | Workday | ✅ working |
 | Amazon / AWS | Amazon's own API | ✅ working |
 | JPMorgan | Oracle Fusion Recruiting Cloud's public REST API | ✅ working |
@@ -67,7 +67,7 @@ open roles are a separate, working source — see the table below.)
 | Intuit, BlackRock, HSBC | Radancy/TalentBrew career-site platform (same family as Two Sigma above, different theme per company — HSBC's variant uses "pipeline" terminology instead of "job") — server-renders its full paginated listing, parsed with `cheerio` | ✅ working |
 | Shopee | Sea Group's own recruiting API (`ats.workatsea.com`), public and unauthenticated. Scoped to Thailand rather than pulling all ~2,600 jobs across every Sea Group market — see `lib/adapters/shopee.ts`. | ✅ working |
 | BCG | Phenom People, but embeds its full result set as a server-rendered JSON blob (`phApp.ddo = {...}`) rather than needing tenant-guessing. Global listing, confirmed Singapore/Vietnam/Philippines/Indonesia/Malaysia postings — see `lib/adapters/html/bcg.ts`. | ✅ working, disabled by default |
-| Cisco, eBay, AirAsia | Same Phenom People `phApp.ddo` pattern as BCG above — shared fetch/parse logic in `lib/adapters/html/phenom.ts`. Cisco confirmed ~1,170 jobs globally (US + APAC); eBay confirmed ~466 jobs; AirAsia confirmed ~142 jobs with real Singapore/Malaysia/Indonesia/Philippines/Cambodia postings. | ✅ working |
+| Cisco, eBay, AirAsia, Circle | Same Phenom People `phApp.ddo` pattern as BCG above — shared fetch/parse logic in `lib/adapters/html/phenom.ts`. Cisco confirmed ~1,170 jobs globally (US + APAC); eBay confirmed ~466 jobs; AirAsia confirmed ~142 jobs with real Singapore/Malaysia/Indonesia/Philippines/Cambodia postings; Circle confirmed ~61 jobs with real Singapore-tagged postings. | ✅ working |
 | Deloitte, PwC (US portion), KPMG (US portion) | Radancy/TalentBrew (same family as Two Sigma/Intuit/BlackRock above) — server-renders its full listing. US-only; other member firms run on separate country sites. | ✅ working, disabled by default |
 | Accenture | Workday (`accenture.wd103.myworkdayjobs.com`) — generic adapter, confirmed real Singapore results | ✅ working, disabled by default |
 | PwC (APAC portion) | PwC's global Workday tenant (`pwc.wd3.myworkdayjobs.com`), searched for "Singapore"/"Bangkok" rather than pulling all ~4,500 jobs worldwide — merged with the US Radancy source above, see `lib/adapters/html/pwc.ts`. | ✅ working, disabled by default |
@@ -91,7 +91,7 @@ open roles are a separate, working source — see the table below.)
 | Blackstone | — | Cloudflare mitigation — `cf-mitigated: challenge` header on every request. Same policy as Bain/Kearney above. |
 | Carlyle Group | — | Cloudflare "Attention Required!" block page on every request. Same policy as Bain/Kearney above. |
 
-59 of 95 default company sources are live and working; the rest are visible but disabled on
+64 of 100 default company sources are live and working; the rest are visible but disabled on
 `/sources` with the specific reason noted above rather than a generic "not yet supported."
 
 All 10 consulting firms (McKinsey, Bain, BCG, Deloitte, Accenture, PwC, EY, Kearney, L.E.K.,
