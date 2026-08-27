@@ -99,6 +99,15 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // as Two Sigma/Intuit/Blackrock above, themed with "pipeline" terminology instead of "job" —
   // see lib/adapters/html/hsbc.ts.
   { id: "co-hsbc", category: "company", name: "HSBC", identifier: "co-hsbc", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
+  // KKP (Kiatnakin Phatra Financial Group): careers.kkpfg.com is a SAP SuccessFactors Career
+  // Site Builder site, same template as EY/SAP above — see lib/adapters/html/kkp.ts. ~125 jobs,
+  // all Thailand (KKP only hires there).
+  { id: "co-kkp", category: "company", name: "KKP", identifier: "co-kkp", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
+  // SCB (Siam Commercial Bank): careers.scb.co.th returns a 403 "The request is blocked" page
+  // on every path, from an Azure Front Door WAF (confirmed via the `x-azure-ref` response
+  // header) — active bot-mitigation, not attempting a bypass. A new mitigation vendor for this
+  // project's list, same policy as the Cloudflare/Akamai/PerimeterX entries elsewhere.
+  { id: "co-scb", category: "company", name: "SCB", identifier: "https://careers.scb.co.th/en/jobs", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance" },
   // Cisco: careers.cisco.com is on Phenom People, same embedded `phApp.ddo` pattern as
   // BCG/eBay — see lib/adapters/html/phenom.ts. ~1,170 jobs globally, US + APAC confirmed.
   { id: "co-cisco", category: "company", name: "Cisco", identifier: "co-cisco", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Software", group: "Software" },

@@ -73,6 +73,7 @@ open roles are a separate, working source — see the table below.)
 | PwC (APAC portion) | PwC's global Workday tenant (`pwc.wd3.myworkdayjobs.com`), searched for "Singapore"/"Bangkok" rather than pulling all ~4,500 jobs worldwide — merged with the US Radancy source above, see `lib/adapters/html/pwc.ts`. | ✅ working, disabled by default |
 | EY | SAP SuccessFactors Career Site Builder (same template as SAP's own career site below) — server-renders its full listing. Global site lists ~7,300 jobs; scoped via `locationsearch` to United States/Singapore/Thailand, all three confirmed with real matches — see `lib/adapters/html/ey.ts` and the shared `lib/adapters/html/successfactors.ts` helper. | ✅ working, disabled by default |
 | SAP | Its own SuccessFactors Career Site Builder site (`jobs.sap.com`) — same template and shared helper as EY above. ~925 jobs globally; scoped to United States/Singapore/Thailand, confirmed 23 Singapore- and 4 Thailand-tagged postings — see `lib/adapters/html/sap.ts`. | ✅ working |
+| KKP (Kiatnakin Phatra Financial Group) | Also SuccessFactors Career Site Builder, same template — but unlike EY/SAP, scoping to `locationsearch=Thailand` actually *undercounts* (~75 of 125 jobs), because some rows render their location in Thai script ("กรุงเทพมหานคร, ไทย") rather than English "Thailand". KKP only hires in Thailand anyway, so the adapter just pulls the full unfiltered listing instead — see `lib/adapters/html/kkp.ts`. ~125 jobs confirmed, all Thailand. | ✅ working |
 | KPMG (Thailand portion) | Adobe Experience Manager — job postings are individual content pages listed directly on the Thailand "Experienced Hires" page, not run through a separate ATS — merged with the US Radancy source above, see `lib/adapters/html/kpmg.ts`. | ✅ working, disabled by default |
 | Netflix | Eightfold | ⚠️ adapter present, disabled by default — endpoint returned a bot-protection page during testing |
 | TikTok/ByteDance | — | Client-side rendered with no exposed API. The one case that's genuinely just "needs a real browser" (not bot-mitigated) — would need a Playwright adapter, which is a real new dependency (~300MB Chromium), so it's flagged rather than added speculatively. |
@@ -89,9 +90,10 @@ open roles are a separate, working source — see the table below.)
 | Bain, Kearney | — | Cloudflare mitigation — Bain's response carries an explicit `cf-mitigated: challenge` header; Kearney serves a captcha challenge page. Same policy as Agoda/Citadel/DoorDash/Canva. |
 | L.E.K. Consulting | — | Runs on Oleeo/TalentLink (`lek.tal.net`) — individual job pages are gated behind an ALTCHA proof-of-work captcha ("Quick Check Needed... confirm you're a real person"), confirmed via plain curl. Active bot-mitigation, not attempting a bypass. |
 | Blackstone | — | Cloudflare mitigation — `cf-mitigated: challenge` header on every request. Same policy as Bain/Kearney above. |
+| SCB (Siam Commercial Bank) | — | Returns a 403 "The request is blocked" page on every path, from an Azure Front Door WAF (confirmed via the `x-azure-ref` response header) — a new bot-mitigation vendor for this list, same policy as the Cloudflare/Akamai/PerimeterX entries elsewhere: not attempting a bypass. |
 | Carlyle Group | — | Cloudflare "Attention Required!" block page on every request. Same policy as Bain/Kearney above. |
 
-64 of 100 default company sources are live and working; the rest are visible but disabled on
+65 of 102 default company sources are live and working; the rest are visible but disabled on
 `/sources` with the specific reason noted above rather than a generic "not yet supported."
 
 All 10 consulting firms (McKinsey, Bain, BCG, Deloitte, Accenture, PwC, EY, Kearney, L.E.K.,

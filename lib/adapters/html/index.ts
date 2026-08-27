@@ -16,6 +16,7 @@ import { sapAdapter } from "./sap";
 import { airasiaAdapter } from "./airasia";
 import { optiverAdapter } from "./optiver";
 import { circleAdapter } from "./circle";
+import { kkpAdapter } from "./kkp";
 
 /**
  * HTML structure isn't standardized like an ATS API, so each company gets its own parser.
@@ -39,6 +40,7 @@ const HTML_SCRAPERS: Record<string, Adapter> = {
   "co-airasia": airasiaAdapter,
   "co-optiver": optiverAdapter,
   "co-circle": circleAdapter,
+  "co-kkp": kkpAdapter,
 };
 
 export const htmlScrapeAdapter: Adapter = {
