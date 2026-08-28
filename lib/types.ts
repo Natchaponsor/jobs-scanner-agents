@@ -97,6 +97,12 @@ export interface ScanSource {
   isDefault: boolean;
   industry: string;
   group: SourceGroup | null;
+  /** Shown on /sources as a subtitle tag. Full country names (not abbreviations — see
+   *  lib/countryCodes.ts for the display mapping), HQ first: the company's headquarters plus
+   *  any of Singapore/Thailand it's confirmed to hire in (via a real scan or adapter
+   *  verification — this project's two priority markets). Not exhaustive: a country's absence
+   *  here means "not confirmed," not "doesn't hire there." Undefined for custom/social sources. */
+  majorLocations?: string[];
 }
 
 export interface ScanRun {

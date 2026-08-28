@@ -2,7 +2,7 @@
 
 import { Bookmark, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { statusLabel } from "@/lib/format";
+import { statusLabel, locationLabel } from "@/lib/format";
 import { useJobsStore } from "@/store/useJobsStore";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -26,7 +26,7 @@ export function JobsTable({ jobs, startIndex }: { jobs: Job[]; startIndex: numbe
         <thead>
           <tr className="border-b border-border text-xs font-medium uppercase tracking-wide text-fg-subtle">
             <th className="w-12 px-4 py-3">No.</th>
-            <th className="px-4 py-3">Role</th>
+            <th className="px-4 py-3">Company/ Role</th>
             <th className="px-4 py-3">Location</th>
             <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3 text-right">Actions</th>
@@ -47,13 +47,7 @@ export function JobsTable({ jobs, startIndex }: { jobs: Job[]; startIndex: numbe
                   {job.workAuthorization !== "n/a" && <Badge tone="neutral">{job.workAuthorization}</Badge>}
                 </div>
               </td>
-              <td className="px-4 py-4 align-top text-fg-muted">
-                {job.locationCity !== "not-specified"
-                  ? [job.locationCity, job.locationState].filter(Boolean).join(", ")
-                  : job.locationCountry !== "not-specified"
-                    ? job.locationCountry
-                    : job.locationRaw || "Not specified"}
-              </td>
+              <td className="px-4 py-4 align-top text-fg-muted">{locationLabel(job)}</td>
               <td className="px-4 py-4 align-top">
                 <Badge tone={job.applied ? "new" : "neutral"}>{statusLabel(job)}</Badge>
               </td>

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { WORKING_ADAPTER_TYPES } from "@/lib/types";
 import type { BigCategory, ScanSource, SourceGroup } from "@/lib/types";
+import { countryCode } from "@/lib/countryCodes";
 
 const BIG_CATEGORY_ORDER: BigCategory[] = ["Finance", "Tech", "Consulting"];
 
@@ -68,7 +69,18 @@ function SourceRow({ source }: { source: ScanSource }) {
           <span className="font-medium text-fg">{source.name}</span>
           {working ? <Badge tone="new">adapter ready</Badge> : <Badge tone="warn">not yet supported</Badge>}
         </div>
-        <p className="truncate text-xs text-fg-subtle">{source.identifier}</p>
+        {source.majorLocations && source.majorLocations.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {source.majorLocations.map((loc) => (
+              <span
+                key={loc}
+                className="rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-fg-muted"
+              >
+                {countryCode(loc)}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <Toggle
