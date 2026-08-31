@@ -14,6 +14,17 @@ export interface RawJob {
   /** Set when the source exposes an explicit seniority tag (e.g. Google's "Mid"/"Senior"
    *  labels) — takes priority over the regex-based guess, which stays generic/global. */
   yearsExperience?: YoeBucket;
+  /** Set by multi-company aggregator sources (category "social", e.g. the GitHub new-grad
+   *  adapter) that don't map one ScanSource to one company — overrides `source.name` as the
+   *  displayed company. Every other adapter leaves this unset, so `source.name` still applies. */
+  company?: string;
+  /** Same idea as `company`, for the dashboard's industry filter — set when the source exposes
+   *  a real per-job category, overriding the static `source.industry`. */
+  industry?: string;
+  /** Set when the source exposes its own structured citizenship/sponsorship field — takes
+   *  priority over the regex-based guess in extractWorkAuthorization, the same way
+   *  `yearsExperience` does for seniority. */
+  workAuthorization?: WorkAuthorization;
 }
 
 export const FUNCTION_LABELS = [
@@ -118,22 +129,29 @@ export function extractJobType(title: string): JobType {
   return "FT";
 }
 
-// Checked before SPONSORSHIP_AVAILABLE_PATTERN below, and deliberately broad on "security
-// clearance" — a posting that mentions it at all overwhelmingly means it's required. The
-// trailing clause is a proximity match for negated sponsorship ("unable to sponsor", "not
-// able to offer visa sponsorship") rather than true negation parsing — regex can't fully
-// cover natural-language phrasing variety, but this catches the common real forms.
-const US_CITIZEN_ONLY_PATTERN =
-  /must\s*be\s*a\s*(?:u\.?s\.?|united\s*states)\s*citizen|u\.?s\.?\s*citizenship\s*(?:is\s*)?required|security\s*clearance|(?:^|\W)(?:no|not|unable\s*to|cannot|can['’]?t|won['’]?t|will\s*not|does\s*not)\b[^.]{0,30}sponsor/i;
+// Deliberately broad on "security clearance" — a posting that mentions it at all overwhelmingly
+// means it's required, and holding a clearance implies citizenship.
+const CITIZENSHIP_REQUIRED_PATTERN =
+  /must\s*be\s*a\s*(?:u\.?s\.?|united\s*states)\s*citizen|u\.?s\.?\s*citizenship\s*(?:is\s*)?required|security\s*clearance/i;
+// A proximity match for negated sponsorship ("unable to sponsor", "not able to offer visa
+// sponsorship") rather than true negation parsing — regex can't fully cover natural-language
+// phrasing variety, but this catches the common real forms. Distinct from citizenship-required:
+// this only means the candidate needs *existing* independent work authorization (a green card
+// holder qualifies), not citizenship specifically.
+const NO_SPONSORSHIP_PATTERN =
+  /(?:^|\W)(?:no|not|unable\s*to|cannot|can['’]?t|won['’]?t|will\s*not|does\s*not)\b[^.]{0,30}sponsor/i;
 const SPONSORSHIP_AVAILABLE_PATTERN =
   /visa\s*sponsorship|sponsor(?:s|ship)?\s*(?:work\s*)?visas?|sponsor\s*work\s*authorization|h-?1b\s*sponsorship|we\s*(?:will\s*|do\s*|can\s*|are\s*happy\s*to\s*)?sponsor\b/i;
 
-/** Only meaningful for US postings — "US citizen only" / "we sponsor visas" is a US hiring
+/** Only meaningful for US postings — citizenship/sponsorship phrasing is a US hiring
  *  convention, so every other country's jobs are left "n/a" rather than guessed at. Within US
- *  postings, defaults to "n/a" too when the posting simply doesn't mention it (most don't). */
+ *  postings, defaults to "n/a" too when the posting simply doesn't mention it (most don't).
+ *  Checked most-specific-first: an explicit citizenship/clearance mention wins over a merely
+ *  negated-sponsorship one, which in turn wins over the broader "sponsorship" keyword match. */
 export function extractWorkAuthorization(text: string, country: string): WorkAuthorization {
   if (country !== "United States") return "n/a";
-  if (US_CITIZEN_ONLY_PATTERN.test(text)) return "US Citizen Only";
+  if (CITIZENSHIP_REQUIRED_PATTERN.test(text)) return "Citizenship Required";
+  if (NO_SPONSORSHIP_PATTERN.test(text)) return "No Sponsorship";
   if (SPONSORSHIP_AVAILABLE_PATTERN.test(text)) return "Sponsorship Available";
   return "n/a";
 }
@@ -141,10 +159,11 @@ export function extractWorkAuthorization(text: string, country: string): WorkAut
 export function normalize(raw: RawJob, source: ScanSource): Job {
   const { country, state, city } = classifyLocation(raw.location);
   const text = `${raw.title} ${raw.description}`;
+  const sourceName = raw.company ?? source.name;
   return {
-    id: `${source.name}::${raw.url}`,
+    id: `${sourceName}::${raw.url}`,
     sourceType: source.category,
-    sourceName: source.name,
+    sourceName,
     roleTitle: raw.title,
     function: extractFunction(raw.title, "Other"),
     locationCountry: country,
@@ -154,8 +173,8 @@ export function normalize(raw: RawJob, source: ScanSource): Job {
     yearsExperience: raw.yearsExperience ?? extractYearsExperience(text),
     jobType: raw.jobType ?? extractJobType(raw.title),
     workMode: raw.workMode ?? extractWorkMode(text),
-    workAuthorization: extractWorkAuthorization(text, country),
-    industry: source.industry,
+    workAuthorization: raw.workAuthorization ?? extractWorkAuthorization(text, country),
+    industry: raw.industry ?? source.industry,
     url: raw.url,
     discoveredAt: raw.postedAt ?? new Date().toISOString(),
     saved: false,

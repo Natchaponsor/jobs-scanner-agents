@@ -8,6 +8,8 @@ import type { ScanSource } from "./types";
  * - ashby: board name (api.ashbyhq.com/posting-api/job-board/{board})
  * - oracle-fusion: `{tenant}|{siteNumber}` e.g. `jpmc|CX_1001`
  * - smartrecruiters: company slug (api.smartrecruiters.com/v1/companies/{slug}/postings)
+ * - github-jobs-list: `"{owner}/{repo}"` of a "Simplify Jobs"-family GitHub repo, e.g.
+ *   "SimplifyJobs/New-Grad-Positions" — see lib/adapters/githubJobsList.ts
  * - html-scrape: unused here — dispatched by source.id, see lib/adapters/html/index.ts
  * - custom-amazon: unused, adapter is hardcoded to amazon.jobs
  * - unimplemented: the company's career site URL, kept for reference / future wiring
@@ -30,6 +32,14 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "social-handshake", category: "social", name: "Handshake", identifier: "https://joinhandshake.com/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "any", group: null },
   { id: "social-glassdoor", category: "social", name: "Glassdoor", identifier: "https://www.glassdoor.com/Job/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "any", group: null },
   { id: "social-indeed", category: "social", name: "Indeed", identifier: "https://www.indeed.com/jobs", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "any", group: null },
+  // New Grad Positions (GitHub): unlike the platforms above, this one is genuinely automatable
+  // — a public, unauthenticated, structured JSON feed (not a scrape), no bot-detection to run
+  // into. Publishes `.github/scripts/listings.json` on its `dev` branch: real postings across
+  // hundreds of companies, crowdsourced/verified by Simplify + community contributors (17.8k+
+  // GitHub stars, updated continuously). Confirmed live: ~3.2k currently active entries. Each
+  // job is attributed to its real hiring company (not this source's own name) — see
+  // lib/adapters/githubJobsList.ts.
+  { id: "social-github-newgrad", category: "social", name: "New Grad Positions (GitHub)", identifier: "SimplifyJobs/New-Grad-Positions", adapterType: "github-jobs-list", enabled: true, isDefault: true, industry: "any", group: null },
 
   // --- Company sites: confirmed working adapters ---
   { id: "co-airbnb", category: "company", name: "Airbnb", identifier: "airbnb", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Travel", group: "Travel and Ride Share", majorLocations: ["United States", "Singapore", "Thailand"] },

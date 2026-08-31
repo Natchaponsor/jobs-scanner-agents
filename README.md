@@ -17,6 +17,15 @@ around. The scan-sources UI still lists them (toggleable, for when/if that chang
 adapters are intentionally unimplemented rather than faked. (Handshake-the-*company*'s own
 open roles are a separate, working source — see the table below.)
 
+One "social" source *is* wired up and working, for a different reason than the rest: **New
+Grad Positions (GitHub)** — `SimplifyJobs/New-Grad-Positions`, a public, unauthenticated,
+structured JSON feed (`.github/scripts/listings.json`, no scraping) covering hundreds of
+companies' postings, crowdsourced/verified by Simplify and community contributors (17.8k+
+GitHub stars, updated continuously). There's no bot-detection to run into and nothing to
+scrape — it's just a real public API, so it gets the same treatment as any Greenhouse/Lever
+board. Unlike every other source, one entry here produces jobs attributed to many different
+real companies (see `lib/adapters/githubJobsList.ts`).
+
 ## Features
 
 - **On-demand scanning** — nothing runs on a schedule; click "Scan now."
@@ -31,7 +40,10 @@ open roles are a separate, working source — see the table below.)
   location strings are inconsistent (multi-location lists, 2/3-letter country codes, bare city
   names).
 - **Work authorization filter** (US jobs only — the dropdown disables itself otherwise):
-  "US Citizen Only" / "Sponsorship Available" / "n/a", regex-inferred from posting text
+  "Citizenship Required" / "No Sponsorship" / "Sponsorship Available" / "n/a" — split into four
+  buckets rather than three, since "no sponsorship" (needs *existing* independent work
+  authorization) and "citizenship required" (or a security clearance, which implies it) are
+  legally different asks. Regex-inferred from posting text
   (`extractWorkAuthorization` in `lib/extract.ts`) — no LLM, so most postings that don't
   explicitly mention citizenship/sponsorship land in "n/a" rather than a guess.
 - **Scan sources page** (`/sources`) — three separate cards: "Social platforms" (job boards,
@@ -48,6 +60,13 @@ open roles are a separate, working source — see the table below.)
 - **Export to Excel** — top nav, between Dashboard and Scan sources; exports whatever the
   current filters/sort are showing.
 - **Saved/applied tracking**, sortable by newest or company, adjustable page size.
+- **Multi-role clustering** — a company with more than one matching role on the current page
+  collapses into a single expandable row ("9 roles", the shared function label if every role
+  has the same one, expand for the individual postings) instead of repeating the company name
+  down the table; a company with just one match still shows inline as a normal row. Grouping is
+  stable-order (a company's position is set by its first occurrence in the current sort), so
+  "Company" sort clusters perfectly and "Newest" clusters correctly whenever a company's roles
+  were discovered together.
 - Footer with a no-affiliation disclaimer, and a feedback button (bottom-right) linking to
   this repo's GitHub Issues.
 
@@ -55,6 +74,7 @@ open roles are a separate, working source — see the table below.)
 
 | Company | Adapter | Status |
 |---|---|---|
+| New Grad Positions (GitHub) — one source covering ~1,300 different real companies | Public JSON feed (`SimplifyJobs/New-Grad-Positions`'s `.github/scripts/listings.json`) — not a scrape, a real structured API. Each job is attributed to its actual hiring company, with per-job industry/work-authorization overrides where the feed's own data is more reliable than this project's usual regex guess — see `lib/adapters/githubJobsList.ts`. Confirmed live: ~3,200 currently active postings. | ✅ working |
 | Airbnb, SoFi, Stripe, Adyen, Chime, Binance, Robinhood, Anthropic, Lyft, Figma, Datadog, Quince, LinkedIn (their own careers, not the job-board platform), TPG, KKR, DRW (board token isn't in the server-rendered HTML — found it inside DRW's own Next.js JS bundle after its CSP header tipped off that it was on Greenhouse at all), Asana, Postman, Gemini, Monzo, N26 | Greenhouse | ✅ working |
 | Spotify, Coda Payments, Nium | Lever | ✅ working |
 | Column, Air Wallex, Ramp, OpenAI, Handshake (their own careers, not the job-board platform), Mercor, Snowflake (career site is a Phenom People skin, but its `applyUrl` fields point straight at `jobs.ashbyhq.com/snowflake` — hits the generic adapter directly), Linear, Kraken (board name isn't the literal company name — "kraken" returns an empty jobs array; the real board is "kraken.com", found in the site's own outbound links) | Ashby | ✅ working |
@@ -94,7 +114,10 @@ open roles are a separate, working source — see the table below.)
 | Carlyle Group | — | Cloudflare "Attention Required!" block page on every request. Same policy as Bain/Kearney above. |
 
 65 of 102 default company sources are live and working; the rest are visible but disabled on
-`/sources` with the specific reason noted above rather than a generic "not yet supported."
+`/sources` with the specific reason noted above rather than a generic "not yet supported." (That
+count is `category: "company"` sources only — the GitHub source above is `category: "social"`,
+alongside LinkedIn/Handshake/Glassdoor/Indeed, so it's not in the denominator despite being the
+one social source that actually works.)
 
 All 10 consulting firms (McKinsey, Bain, BCG, Deloitte, Accenture, PwC, EY, Kearney, L.E.K.,
 KPMG) were investigated for US and APAC (Singapore/Thailand especially) coverage; 6 came back

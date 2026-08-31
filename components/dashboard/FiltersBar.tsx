@@ -34,7 +34,8 @@ const WORK_MODE_OPTIONS: { label: string; value: WorkMode | "any" }[] = [
 
 const WORK_AUTHORIZATION_OPTIONS: { label: string; value: WorkAuthorization | "any" }[] = [
   { label: "Any", value: "any" },
-  { label: "US Citizen Only", value: "US Citizen Only" },
+  { label: "Citizenship Required", value: "Citizenship Required" },
+  { label: "No Sponsorship", value: "No Sponsorship" },
   { label: "Sponsorship Available", value: "Sponsorship Available" },
   { label: "n/a", value: "n/a" },
 ];

@@ -13,22 +13,26 @@ describe("extractWorkAuthorization", () => {
     expect(extractWorkAuthorization("", "United States")).toBe("n/a");
   });
 
-  it("detects explicit US-citizen-only language", () => {
-    expect(extractWorkAuthorization("Must be a U.S. citizen to apply.", "United States")).toBe("US Citizen Only");
+  it("detects explicit US-citizenship-required language", () => {
+    expect(extractWorkAuthorization("Must be a U.S. citizen to apply.", "United States")).toBe(
+      "Citizenship Required"
+    );
     expect(extractWorkAuthorization("U.S. citizenship is required for this role.", "United States")).toBe(
-      "US Citizen Only"
+      "Citizenship Required"
     );
   });
 
-  it("detects negated sponsorship language as citizen-only", () => {
+  // Citizenship Required and No Sponsorship are deliberately distinct buckets: a posting that
+  // merely can't sponsor a new visa is satisfiable by a green card holder, not just a citizen.
+  it("detects negated sponsorship language as its own 'No Sponsorship' bucket, not citizenship-required", () => {
     expect(
       extractWorkAuthorization(
         "Candidates must be authorized to work in the US. We are unable to sponsor visas at this time.",
         "United States"
       )
-    ).toBe("US Citizen Only");
+    ).toBe("No Sponsorship");
     expect(extractWorkAuthorization("We do not sponsor employment visas.", "United States")).toBe(
-      "US Citizen Only"
+      "No Sponsorship"
     );
   });
 
@@ -36,11 +40,11 @@ describe("extractWorkAuthorization", () => {
   // and missed the far more common "requires ... security clearance" word order.
   it("[bug fix] catches 'requires a security clearance' phrasing, not just 'security clearance required'", () => {
     expect(extractWorkAuthorization("This role requires an active security clearance.", "United States")).toBe(
-      "US Citizen Only"
+      "Citizenship Required"
     );
     expect(
       extractWorkAuthorization("This position requires the ability to obtain a security clearance.", "United States")
-    ).toBe("US Citizen Only");
+    ).toBe("Citizenship Required");
   });
 
   // Bug fix #2: the original pattern only matched "sponsor" immediately followed by "visa(s)" or
@@ -62,7 +66,7 @@ describe("extractWorkAuthorization", () => {
   it("[bug fix] negated sponsorship still wins over the broader sponsorship-available match", () => {
     expect(
       extractWorkAuthorization("Sorry, we are not able to offer visa sponsorship for this position.", "United States")
-    ).toBe("US Citizen Only");
+    ).toBe("No Sponsorship");
   });
 });
 

@@ -10,6 +10,7 @@ import { smartRecruitersAdapter } from "./smartrecruiters";
 import { htmlScrapeAdapter } from "./html";
 import { amazonAdapter } from "./amazon";
 import { shopeeAdapter } from "./shopee";
+import { githubJobsListAdapter } from "./githubJobsList";
 import { playwrightGenericAdapter } from "./playwright-generic";
 
 export const ADAPTERS: Record<AdapterType, Adapter> = {
@@ -23,6 +24,7 @@ export const ADAPTERS: Record<AdapterType, Adapter> = {
   "html-scrape": htmlScrapeAdapter,
   "custom-amazon": amazonAdapter,
   "custom-shopee": shopeeAdapter,
+  "github-jobs-list": githubJobsListAdapter,
   playwright: playwrightGenericAdapter,
   unimplemented: playwrightGenericAdapter,
 };

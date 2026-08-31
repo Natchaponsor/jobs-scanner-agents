@@ -3,9 +3,15 @@ export type WorkMode = "in-person" | "hybrid" | "remote" | "not-specified";
 export type YoeBucket = "0-3" | "3-5" | "5-10" | "10+" | "not-specified";
 /** Only ever inferred for US postings — see extractWorkAuthorization in lib/extract.ts. Every
  *  non-US job is "n/a", not because sponsorship isn't a real concern elsewhere, but because
- *  the "US citizen only" / "we sponsor visas" phrasing this is pattern-matched against is a
- *  specifically US hiring convention. */
-export type WorkAuthorization = "US Citizen Only" | "Sponsorship Available" | "n/a";
+ *  the citizenship/sponsorship phrasing this is pattern-matched against is a specifically US
+ *  hiring convention.
+ *
+ *  Four distinct buckets, not three — "Citizenship Required" and "No Sponsorship" used to be
+ *  merged into one "US Citizen Only" value, but they're legally different asks: citizenship
+ *  (or a security clearance, which implies it) is the strict case, while "no sponsorship" only
+ *  requires *existing* independent work authorization (a green card holder qualifies for the
+ *  latter but not the former). */
+export type WorkAuthorization = "Citizenship Required" | "No Sponsorship" | "Sponsorship Available" | "n/a";
 export interface Job {
   /** Stable id: `${sourceName}::${url}` */
   id: string;
@@ -42,6 +48,7 @@ export type AdapterType =
   | "html-scrape"
   | "custom-amazon"
   | "custom-shopee"
+  | "github-jobs-list"
   | "playwright"
   | "unimplemented";
 
@@ -58,6 +65,7 @@ export const WORKING_ADAPTER_TYPES: AdapterType[] = [
   "html-scrape",
   "custom-amazon",
   "custom-shopee",
+  "github-jobs-list",
 ];
 
 /** Curated groupings for the /sources settings page (distinct from `industry`, which is
