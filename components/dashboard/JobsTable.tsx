@@ -110,18 +110,18 @@ function ClusterHeaderRow({
     <tr className="border-b border-border last:border-0 hover:bg-panel/50">
       <td className="px-4 py-4 align-top text-fg-subtle">{number}</td>
       <td className="px-4 py-4 align-top">
-        <button type="button" onClick={onToggle} className="flex w-full min-w-0 items-start gap-2 text-left">
-          {isOpen ? (
-            <ChevronDown className="mt-1 h-4 w-4 shrink-0 text-fg-subtle" />
-          ) : (
-            <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-fg-subtle" />
-          )}
-          <span className="min-w-0">
-            <span className="block font-serif text-base font-medium text-fg">{group.company}</span>
-            <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
-              <Badge tone="accent">{group.jobs.length} roles</Badge>
-              {fn && <span className="text-sm text-fg-muted">{fn}</span>}
-            </span>
+        <button type="button" onClick={onToggle} className="flex w-full min-w-0 flex-col items-start text-left">
+          <span className="flex items-center gap-1.5">
+            <span className="font-serif text-base font-medium text-fg">{group.company}</span>
+            {isOpen ? (
+              <ChevronDown className="h-4 w-4 shrink-0 text-fg-subtle" />
+            ) : (
+              <ChevronRight className="h-4 w-4 shrink-0 text-fg-subtle" />
+            )}
+          </span>
+          <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <Badge tone="accent">{group.jobs.length} roles</Badge>
+            {fn && <span className="text-sm text-fg-muted">{fn}</span>}
           </span>
         </button>
       </td>
