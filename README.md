@@ -173,6 +173,30 @@ hardcoded to this repo's own path, so update it if you fork this to a different 
 username/repo. You can also trigger a run immediately from the Actions tab
 (`workflow_dispatch`) instead of waiting for the schedule.
 
+## Deploying to Vercel (optional)
+
+Also optional, and complementary to the GitHub Actions layer above rather than a replacement
+for it — Vercel hosts the interactive app itself (dashboard, `/sources`, `/api/scan`) at a real
+URL instead of just `localhost`, for free at this scale. **Hosting it doesn't change data
+locality at all**: saved/applied status, filters, and enabled sources still live in
+whichever *browser* has the app open, scoped to that origin — that was already true at
+`localhost:3002`, and it's equally true at `your-project.vercel.app`. There's no database and
+no shared state between visitors; two different browsers hitting the same deployed URL just
+have two independent local states, same as they would locally.
+
+1. Push this repo to GitHub (if you haven't already).
+2. In Vercel: **Add New Project** → import the repo → it auto-detects Next.js → **Deploy**.
+   No config needed beyond what's already in this repo.
+3. Every future push to `main` auto-deploys.
+4. `/api/scan` runs as a Vercel serverless function — `app/api/scan/route.ts` sets
+   `maxDuration = 60` (Hobby's max for a standard function) since a full scan across every
+   enabled source has taken up to ~70s in testing. If "Scan now" times out with a lot of
+   sources enabled, turn on **Fluid Compute** in the project's Settings → Functions (still
+   free on Hobby) and bump `maxDuration` to `300`.
+
+The daily GitHub Actions snapshot keeps working independently of whether (or where) the app is
+deployed — "Sync GitHub snapshot" fetches straight from `raw.githubusercontent.com` either way.
+
 ## Testing
 
 ```bash
