@@ -9,6 +9,27 @@ import type { Filters, Job, ScanRun, ScanSource, SourceGroup } from "@/lib/types
 
 export type SortBy = "newest" | "company";
 
+/** The repo's daily GitHub Actions workflow (.github/workflows/daily-scan.yml) commits its
+ *  scan result here — see scripts/scan.ts and README's "Running the daily scan on GitHub"
+ *  section. raw.githubusercontent.com serves this with permissive CORS, so the browser can
+ *  fetch it directly with no proxy route needed. */
+const GITHUB_SNAPSHOT_URL = "https://raw.githubusercontent.com/Natchaponsor/jobs-scanner-agents/main/data/jobs.json";
+
+/** Shared by runScan and syncFromGithub: merge freshly-fetched jobs into what's already known,
+ *  by id — a job already in the store keeps its existing entry (preserving saved/applied
+ *  state) rather than being overwritten by the newly-fetched one. */
+function mergeJobs(existing: Job[], found: Job[]): { jobs: Job[]; jobsNew: number } {
+  const existingById = new Map(existing.map((j) => [j.id, j]));
+  let jobsNew = 0;
+  for (const job of found) {
+    if (!existingById.has(job.id)) {
+      jobsNew += 1;
+      existingById.set(job.id, job);
+    }
+  }
+  return { jobs: Array.from(existingById.values()), jobsNew };
+}
+
 interface JobsState {
   jobs: Job[];
   sources: ScanSource[];
@@ -20,6 +41,11 @@ interface JobsState {
   lastScanAt: string | null;
   lastScanRun: ScanRun | null;
   isScanning: boolean;
+  /** Distinct from lastScanAt/lastScanRun — this is when jobs were last pulled in from the
+   *  GitHub Actions daily snapshot rather than a live local scan. */
+  lastSyncAt: string | null;
+  lastSyncRun: ScanRun | null;
+  isSyncing: boolean;
   hasHydrated: boolean;
 
   setHasHydrated: (v: boolean) => void;
@@ -40,6 +66,7 @@ interface JobsState {
   unmarkApplied: (id: string) => void;
 
   runScan: () => Promise<void>;
+  syncFromGithub: () => Promise<void>;
 }
 
 export const useJobsStore = create<JobsState>()(
@@ -55,6 +82,9 @@ export const useJobsStore = create<JobsState>()(
       lastScanAt: null,
       lastScanRun: null,
       isScanning: false,
+      lastSyncAt: null,
+      lastSyncRun: null,
+      isSyncing: false,
       hasHydrated: false,
 
       setHasHydrated: (v) => set({ hasHydrated: v }),
@@ -129,24 +159,33 @@ export const useJobsStore = create<JobsState>()(
           if (!res.ok) throw new Error(`Scan failed: HTTP ${res.status}`);
           const data = (await res.json()) as { jobs: Job[]; run: ScanRun };
 
-          const existingById = new Map(jobs.map((j) => [j.id, j]));
-          let jobsNew = 0;
-          for (const found of data.jobs) {
-            if (!existingById.has(found.id)) {
-              jobsNew += 1;
-              existingById.set(found.id, found);
-            }
-            // If already known, keep the existing entry (preserves saved/applied state)
-            // instead of overwriting with the freshly-fetched one.
-          }
-
+          const { jobs: merged, jobsNew } = mergeJobs(jobs, data.jobs);
           set({
-            jobs: Array.from(existingById.values()),
+            jobs: merged,
             lastScanAt: new Date().toISOString(),
             lastScanRun: { ...data.run, jobsNew },
           });
         } finally {
           set({ isScanning: false });
+        }
+      },
+
+      syncFromGithub: async () => {
+        const { jobs } = get();
+        set({ isSyncing: true });
+        try {
+          const res = await fetch(GITHUB_SNAPSHOT_URL, { cache: "no-store" });
+          if (!res.ok) throw new Error(`Sync failed: HTTP ${res.status}`);
+          const data = (await res.json()) as { jobs: Job[]; run: ScanRun };
+
+          const { jobs: merged, jobsNew } = mergeJobs(jobs, data.jobs);
+          set({
+            jobs: merged,
+            lastSyncAt: new Date().toISOString(),
+            lastSyncRun: { ...data.run, jobsNew },
+          });
+        } finally {
+          set({ isSyncing: false });
         }
       },
     }),
@@ -163,6 +202,8 @@ export const useJobsStore = create<JobsState>()(
         perPage: state.perPage,
         lastScanAt: state.lastScanAt,
         lastScanRun: state.lastScanRun,
+        lastSyncAt: state.lastSyncAt,
+        lastSyncRun: state.lastSyncRun,
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);

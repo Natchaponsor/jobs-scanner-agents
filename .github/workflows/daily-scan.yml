@@ -1,0 +1,40 @@
+name: Daily jobs scan
+
+# Runs the same adapters as the local "Scan now" button (see scripts/scan.ts), once a day, and
+# commits the result to data/jobs.json. This is the "always on" half of the app — everything
+# personal (saved/applied status, filters, which sources you have enabled) stays local to your
+# own browser's localStorage and never touches this workflow; only the raw scanned listings
+# (not personal data) get centrally refreshed. See README's "Running the daily scan on GitHub"
+# section.
+on:
+  schedule:
+    # 13:00 UTC daily. Cron minimum granularity is per-minute but GitHub only guarantees
+    # "best effort, may be delayed" for scheduled runs — treat this as "roughly once a day",
+    # not a precise clock.
+    - cron: "0 13 * * *"
+  workflow_dispatch: {} # lets you trigger a run manually from the Actions tab, for testing
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+
+      - run: npm run scan:ci
+
+      - name: Commit data/jobs.json if it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/jobs.json
+          git diff --staged --quiet && echo "No changes to commit." || git commit -m "Daily jobs scan"
+          git push

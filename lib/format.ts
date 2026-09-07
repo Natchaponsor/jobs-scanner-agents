@@ -30,3 +30,8 @@ export function lastScanLabel(lastScanAt: string | null): string {
   if (!lastScanAt) return "Never scanned";
   return `Scanned ${format(new Date(lastScanAt), "MMM d, h:mm a")}`;
 }
+
+export function lastSyncLabel(lastSyncAt: string | null): string {
+  if (!lastSyncAt) return "Never synced";
+  return `Synced ${format(new Date(lastSyncAt), "MMM d, h:mm a")}`;
+}

@@ -25,9 +25,12 @@ export const oracleFusionAdapter: Adapter = {
 
     // Oracle's `finder` syntax uses literal `;`/`,` as delimiters — encoding the whole
     // expression (rather than just the keyword value) breaks parsing and silently returns
-    // an empty result set instead of an error.
-    const keyword = encodeURIComponent(`"${query.function}"`);
-    const finder = `findReqs;siteNumber=${siteNumber},limit=25,keyword=${keyword}`;
+    // an empty result set instead of an error. A `keyword=""` clause does the same (confirmed
+    // directly against the API: it returns zero results) — so an empty query.function omits
+    // the clause entirely rather than passing it through empty.
+    const finder = query.function
+      ? `findReqs;siteNumber=${siteNumber},limit=25,keyword=${encodeURIComponent(`"${query.function}"`)}`
+      : `findReqs;siteNumber=${siteNumber},limit=25`;
     const url = `https://${tenant}.fa.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList&finder=${finder}`;
     const res = await fetch(url, { headers: { Accept: "application/json" } });
     if (!res.ok) throw new Error(`Oracle Fusion ${source.name}: HTTP ${res.status}`);

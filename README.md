@@ -150,6 +150,29 @@ npm run dev
 
 Opens on **http://localhost:3002**. Click "Scan now" — nothing scans automatically.
 
+## Running the daily scan on GitHub
+
+Everything above still runs entirely on your own machine with zero hosting cost — this is an
+*optional* addition, not a replacement. GitHub can't host a Next.js server for free, but
+**GitHub Actions** can run a scheduled job for free, which turns out to be enough:
+`.github/workflows/daily-scan.yml` runs once a day (`scripts/scan.ts`, the same adapters/
+`runScan` logic as "Scan now", no server involved), and commits the result to `data/jobs.json`.
+
+Your own saved/applied status, filters, and enabled sources never leave your browser's
+`localStorage` — only the raw scanned listings (not personal data) get centrally refreshed.
+The dashboard's **"Sync GitHub snapshot"** button fetches that file directly from
+`raw.githubusercontent.com` (public, no auth, permissive CORS — no proxy route needed) and
+merges it in exactly like a live scan would, by job id, preserving your existing saved/applied
+state. **"Scan now" still works exactly as before** — it's a live, on-demand, local scan; the
+daily GitHub run is a separate, additional background layer, not a replacement for it.
+
+To turn this on for your own fork: push to GitHub with Actions enabled (the workflow needs
+`contents: write` permission, already set in the YAML) and it starts running on the `0 13 * * *`
+UTC schedule; the `data/jobs.json` URL in `store/useJobsStore.ts`'s `GITHUB_SNAPSHOT_URL` is
+hardcoded to this repo's own path, so update it if you fork this to a different GitHub
+username/repo. You can also trigger a run immediately from the Actions tab
+(`workflow_dispatch`) instead of waiting for the schedule.
+
 ## Testing
 
 ```bash

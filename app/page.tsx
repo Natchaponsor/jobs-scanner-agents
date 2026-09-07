@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { Download, RefreshCw } from "lucide-react";
 import { useJobsStore } from "@/store/useJobsStore";
 import { filterAndSortJobs } from "@/lib/selectors";
-import { lastScanLabel } from "@/lib/format";
+import { lastScanLabel, lastSyncLabel } from "@/lib/format";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FiltersBar } from "@/components/dashboard/FiltersBar";
@@ -28,8 +28,12 @@ export default function DashboardPage() {
     lastScanAt,
     lastScanRun,
     isScanning,
+    lastSyncAt,
+    lastSyncRun,
+    isSyncing,
     hasHydrated,
     runScan,
+    syncFromGithub,
   } = useJobsStore();
   const [page, setPage] = useState(1);
 
@@ -61,11 +65,19 @@ export default function DashboardPage() {
           <p className="text-sm text-fg-muted">Full-time roles across your scanning scope, scanned on demand.</p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <span className="text-xs text-fg-subtle">{lastScanLabel(lastScanAt)}</span>
-          <Button variant="primary" onClick={() => runScan()} disabled={isScanning}>
-            <RefreshCw className={`h-4 w-4 ${isScanning ? "animate-spin" : ""}`} />
-            {isScanning ? "Scanning…" : "Scan now"}
-          </Button>
+          <span className="text-xs text-fg-subtle">
+            {lastScanLabel(lastScanAt)} · {lastSyncLabel(lastSyncAt)}
+          </span>
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => syncFromGithub()} disabled={isSyncing}>
+              <Download className={`h-4 w-4 ${isSyncing ? "animate-pulse" : ""}`} />
+              {isSyncing ? "Syncing…" : "Sync GitHub snapshot"}
+            </Button>
+            <Button variant="primary" onClick={() => runScan()} disabled={isScanning}>
+              <RefreshCw className={`h-4 w-4 ${isScanning ? "animate-spin" : ""}`} />
+              {isScanning ? "Scanning…" : "Scan now"}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -76,6 +88,22 @@ export default function DashboardPage() {
           </p>
           <ul className="mt-1 space-y-0.5 text-xs text-fg-muted">
             {lastScanRun.errors.map((e) => (
+              <li key={e.sourceName}>
+                <span className="font-medium text-fg">{e.sourceName}:</span> {e.message}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
+      {lastSyncRun && lastSyncRun.errors.length > 0 && (
+        <Card className="mb-4 border-loss/40 bg-loss/5 p-4">
+          <p className="text-sm font-medium text-loss">
+            {lastSyncRun.errors.length} source{lastSyncRun.errors.length > 1 ? "s" : ""} failed on the last GitHub
+            snapshot
+          </p>
+          <ul className="mt-1 space-y-0.5 text-xs text-fg-muted">
+            {lastSyncRun.errors.map((e) => (
               <li key={e.sourceName}>
                 <span className="font-medium text-fg">{e.sourceName}:</span> {e.message}
               </li>

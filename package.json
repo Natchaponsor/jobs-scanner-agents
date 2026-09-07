@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -p 3002",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "scan:ci": "tsx scripts/scan.ts"
   },
   "dependencies": {
     "cheerio": "^1.2.0",
@@ -28,6 +29,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5",
     "vitest": "^4.1.11"
   }
