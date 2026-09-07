@@ -161,10 +161,18 @@ Everything above still runs entirely on your own machine with zero hosting cost 
 Your own saved/applied status, filters, and enabled sources never leave your browser's
 `localStorage` — only the raw scanned listings (not personal data) get centrally refreshed.
 The dashboard's **"Sync GitHub snapshot"** button fetches that file directly from
-`raw.githubusercontent.com` (public, no auth, permissive CORS — no proxy route needed) and
-merges it in exactly like a live scan would, by job id, preserving your existing saved/applied
-state. **"Scan now" still works exactly as before** — it's a live, on-demand, local scan; the
-daily GitHub run is a separate, additional background layer, not a replacement for it.
+`raw.githubusercontent.com` (no auth, permissive CORS — no proxy route needed) and merges it in
+exactly like a live scan would, by job id, preserving your existing saved/applied state.
+**"Scan now" still works exactly as before** — it's a live, on-demand, local scan; the daily
+GitHub run is a separate, additional background layer, not a replacement for it.
+
+**The repo needs to be public** for this to work — `raw.githubusercontent.com` returns a 404
+for files in a private repo unless the request carries a GitHub auth token, which a plain
+browser fetch can't do securely. There's nothing sensitive to expose by making it public:
+no secrets are tracked (`.env`/`.env.local` are gitignored), and `data/jobs.json` is just
+scraped *public* job postings — none of your personal saved/applied/filter state ever leaves
+your browser to begin with. (Settings → General → Danger Zone → Change visibility, if it's
+currently private.)
 
 To turn this on for your own fork: push to GitHub with Actions enabled (the workflow needs
 `contents: write` permission, already set in the YAML) and it starts running on the `0 13 * * *`
