@@ -5,6 +5,8 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { DEFAULT_FILTERS } from "@/lib/filters";
 import { DEFAULT_SOURCES } from "@/lib/defaultSources";
 import { WORKING_ADAPTER_TYPES } from "@/lib/types";
+import { mergeJobs, pruneClosed } from "@/lib/mergeJobs";
+import { loadJobs, saveJobs } from "@/lib/jobsDb";
 import type { Filters, Job, ScanRun, ScanSource, SourceGroup } from "@/lib/types";
 
 export type SortBy = "newest" | "company";
@@ -14,21 +16,6 @@ export type SortBy = "newest" | "company";
  *  section. raw.githubusercontent.com serves this with permissive CORS, so the browser can
  *  fetch it directly with no proxy route needed. */
 const GITHUB_SNAPSHOT_URL = "https://raw.githubusercontent.com/Natchaponsor/jobs-scanner-agents/main/data/jobs.json";
-
-/** Shared by runScan and syncFromGithub: merge freshly-fetched jobs into what's already known,
- *  by id — a job already in the store keeps its existing entry (preserving saved/applied
- *  state) rather than being overwritten by the newly-fetched one. */
-function mergeJobs(existing: Job[], found: Job[]): { jobs: Job[]; jobsNew: number } {
-  const existingById = new Map(existing.map((j) => [j.id, j]));
-  let jobsNew = 0;
-  for (const job of found) {
-    if (!existingById.has(job.id)) {
-      jobsNew += 1;
-      existingById.set(job.id, job);
-    }
-  }
-  return { jobs: Array.from(existingById.values()), jobsNew };
-}
 
 interface JobsState {
   jobs: Job[];
@@ -49,6 +36,7 @@ interface JobsState {
   hasHydrated: boolean;
 
   setHasHydrated: (v: boolean) => void;
+  setJobs: (jobs: Job[]) => void;
   setFilters: (patch: Partial<Filters>) => void;
   clearFilters: () => void;
   setSortBy: (v: SortBy) => void;
@@ -88,6 +76,7 @@ export const useJobsStore = create<JobsState>()(
       hasHydrated: false,
 
       setHasHydrated: (v) => set({ hasHydrated: v }),
+      setJobs: (jobs) => set({ jobs }),
       setFilters: (patch) => set((state) => ({ filters: { ...state.filters, ...patch } })),
       clearFilters: () => set({ filters: DEFAULT_FILTERS }),
       setSortBy: (v) => set({ sortBy: v }),
@@ -179,10 +168,14 @@ export const useJobsStore = create<JobsState>()(
           const data = (await res.json()) as { jobs: Job[]; run: ScanRun };
 
           const { jobs: merged, jobsNew } = mergeJobs(jobs, data.jobs);
+          // The snapshot is the source of truth for what's still open — drop closed postings
+          // (never ones you saved/applied to, never companies it doesn't cover).
+          const failed = new Set(data.run.errors.map((e) => e.sourceName));
+          const { jobs: pruned, removed } = pruneClosed(merged, data.jobs, failed);
           set({
-            jobs: merged,
+            jobs: pruned,
             lastSyncAt: new Date().toISOString(),
-            lastSyncRun: { ...data.run, jobsNew },
+            lastSyncRun: { ...data.run, jobsNew, jobsRemoved: removed },
           });
         } finally {
           set({ isSyncing: false });
@@ -192,8 +185,9 @@ export const useJobsStore = create<JobsState>()(
     {
       name: "jobs-scanner-agents-store",
       storage: createJSONStorage(() => localStorage),
+      // `jobs` is deliberately absent: it lives in IndexedDB (lib/jobsDb.ts) — a full scan is far
+      // too big for localStorage's quota, and a quota error there makes every state update throw.
       partialize: (state) => ({
-        jobs: state.jobs,
         sources: state.sources,
         filters: state.filters,
         sortBy: state.sortBy,
@@ -206,7 +200,7 @@ export const useJobsStore = create<JobsState>()(
         lastSyncRun: state.lastSyncRun,
       }),
       onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+        void hydrateJobs(state);
       },
       // Sources are persisted wholesale, so a browser with existing state would otherwise
       // never pick up companies added to DEFAULT_SOURCES later (e.g. Column/Google/Two
@@ -233,3 +227,46 @@ export const useJobsStore = create<JobsState>()(
     }
   )
 );
+
+/** Load the jobs out of IndexedDB once the small persisted state has rehydrated, and only then
+ *  flip `hasHydrated` so the UI never renders an empty list that's about to fill in. Browsers
+ *  that still hold jobs from before this change have them in the old localStorage blob (they
+ *  arrive here as `state.jobs`) — those get moved into IndexedDB the first time through, and the
+ *  next state write drops them from localStorage since `jobs` is no longer persisted there. */
+async function hydrateJobs(state: JobsState | undefined) {
+  // Server-side rendering also runs rehydration (Node exposes a stub `localStorage`), but
+  // IndexedDB and the loading gate only mean anything in the browser — and a setState there
+  // would try to persist through that stub and throw.
+  if (typeof window === "undefined") return;
+  // `state` is undefined on a first visit (nothing in localStorage yet) — the gate still has to
+  // open then. Everything below runs after an `await`, so it's safe to touch `useJobsStore` even
+  // though this is first called synchronously from inside create(), before it's assigned.
+  try {
+    const stored = await loadJobs();
+    if (stored) useJobsStore.setState({ jobs: stored });
+    else if (state && state.jobs.length > 0) await saveJobs(state.jobs);
+  } finally {
+    useJobsStore.setState({ hasHydrated: true });
+  }
+}
+
+// Persist jobs to IndexedDB whenever the list changes — debounced, since a scan/sync/toggle can
+// fire several updates and each write copies the whole array. Flushed immediately when the tab is
+// hidden so a quick save-then-close isn't lost.
+if (typeof window !== "undefined") {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const flush = () => {
+    if (timer === undefined) return;
+    clearTimeout(timer);
+    timer = undefined;
+    void saveJobs(useJobsStore.getState().jobs);
+  };
+  useJobsStore.subscribe((state, prev) => {
+    if (!state.hasHydrated || state.jobs === prev.jobs) return;
+    if (timer !== undefined) clearTimeout(timer);
+    timer = setTimeout(flush, 400);
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flush();
+  });
+}

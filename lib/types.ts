@@ -120,6 +120,9 @@ export interface ScanRun {
   sourcesScanned: number;
   jobsFound: number;
   jobsNew: number;
+  /** Set only by a GitHub snapshot sync: how many locally-held jobs the snapshot no longer listed
+   *  (closed postings) and were dropped — see pruneClosed in lib/mergeJobs.ts. */
+  jobsRemoved?: number;
   errors: { sourceName: string; message: string }[];
 }
 
