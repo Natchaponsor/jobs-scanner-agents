@@ -89,7 +89,11 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "co-figma", category: "company", name: "Figma", identifier: "figma", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["United States", "Singapore"] },
   { id: "co-datadog", category: "company", name: "Datadog", identifier: "datadog", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["United States", "Singapore"] },
   { id: "co-asana", category: "company", name: "Asana", identifier: "asana", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["United States", "Singapore"] },
-  { id: "co-postman", category: "company", name: "Postman", identifier: "postman", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["United States"] },
+  // Postman: moved off Greenhouse (the "postman" board now 404s) to Workday — found by watching
+  // the open-positions page's network requests, which load postman.com's own
+  // /_mk-www-next/api-cache/careers-jobs.json feed whose job URLs point at
+  // postman.wd108.myworkdayjobs.com/careers. Generic Workday adapter, ~37 jobs.
+  { id: "co-postman", category: "company", name: "Postman", identifier: "postman.wd108.myworkdayjobs.com|careers", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["United States"] },
   { id: "co-linear", category: "company", name: "Linear", identifier: "Linear", adapterType: "ashby", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["United States"] },
   { id: "co-razer", category: "company", name: "Razer", identifier: "razer.wd3.myworkdayjobs.com|Careers", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["Singapore"] },
   // Snowflake's career site is a Phenom People skin, but its jobs are actually hosted on
@@ -101,9 +105,11 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "co-trendmicro", category: "company", name: "Trend Micro", identifier: "trendmicro.wd3.myworkdayjobs.com|External", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["Japan", "Singapore"] },
   { id: "co-propertyguru", category: "company", name: "PropertyGuru", identifier: "propertyguru.wd105.myworkdayjobs.com|PropertyGuru", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["Singapore"] },
   { id: "co-quince", category: "company", name: "Quince", identifier: "quince", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "E-Commerce", group: "E-Commerce", majorLocations: ["United States", "Thailand"] },
-  // LinkedIn's own careers page (Greenhouse) — separate from the "LinkedIn" social source
-  // above, which represents scanning LinkedIn-the-job-board-platform (not automatable).
-  { id: "co-linkedin", category: "company", name: "LinkedIn", identifier: "linkedin", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Social Media", group: "Social Media", majorLocations: ["United States"] },
+  // LinkedIn's own careers: used to be a Greenhouse board, but that board now 404s and
+  // careers.linkedin.com sends every "open roles" link to linkedin.com/jobs — the same job-board
+  // platform as the "LinkedIn" social source above, which actively blocks automated access.
+  // Nothing left to scan without going through it, so this stays unimplemented.
+  { id: "co-linkedin", category: "company", name: "LinkedIn", identifier: "https://careers.linkedin.com/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Social Media", group: "Social Media", majorLocations: ["United States"] },
   { id: "co-expedia", category: "company", name: "Expedia", identifier: "expedia.wd108.myworkdayjobs.com|search", adapterType: "workday", enabled: true, isDefault: true, industry: "Travel", group: "Travel and Ride Share", majorLocations: ["United States"] },
   // AirAsia: mycareer.airasia.com is on Phenom People, same embedded `phApp.ddo` pattern as
   // BCG/Cisco/eBay/Snowflake above — see lib/adapters/html/phenom.ts and
@@ -133,10 +139,12 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // eBay: jobs.ebayinc.com is also Phenom People — see lib/adapters/html/phenom.ts.
   // ~466 jobs confirmed via plain curl.
   { id: "co-ebay", category: "company", name: "Ebay", identifier: "co-ebay", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "E-Commerce", group: "E-Commerce", majorLocations: ["United States"] },
-  // SAP: jobs.sap.com runs its own SuccessFactors Career Site Builder — same template as EY
-  // above. Scoped to US/Singapore/Thailand — see lib/adapters/html/sap.ts and the shared
-  // lib/adapters/html/successfactors.ts helper.
-  { id: "co-sap", category: "company", name: "SAP", identifier: "co-sap", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["Germany", "Singapore", "Thailand"] },
+  // SAP: jobs.sap.com (SuccessFactors Career Site Builder, same template as EY — it worked,
+  // 221 jobs across US/Singapore/Thailand) is now behind a Cloudflare managed challenge:
+  // every request gets a 403 with `cf-mitigated: challenge`, from both a GitHub runner and a
+  // local machine. Active bot-mitigation, so not attempting a bypass. lib/adapters/html/sap.ts
+  // is kept (unregistered-in-practice while this stays unimplemented) in case the challenge lifts.
+  { id: "co-sap", category: "company", name: "SAP", identifier: "https://jobs.sap.com/search/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Software", group: "Software", majorLocations: ["Germany", "Singapore", "Thailand"] },
   // Sea Group's own recruiting API (ats.workatsea.com), scoped to Thailand — see lib/adapters/shopee.ts.
   { id: "co-shopee", category: "company", name: "Shopee", identifier: "shopee", adapterType: "custom-shopee", enabled: true, isDefault: true, industry: "E-Commerce", group: "E-Commerce", majorLocations: ["Singapore", "Thailand"] },
   // careers.lmwn.com server-renders its listing — see lib/adapters/html/linemanwongnai.ts.
