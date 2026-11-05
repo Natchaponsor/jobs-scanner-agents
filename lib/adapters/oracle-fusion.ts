@@ -1,4 +1,5 @@
 import type { Adapter } from "./types";
+import { mapLimit, remainingOffsets, withRetry } from "./paginate";
 
 interface OracleRequisition {
   Id: string;
@@ -11,6 +12,11 @@ interface OracleRequisition {
   ExternalResponsibilitiesStr?: string;
   WorkplaceType?: string;
 }
+
+// 100 is the largest page Oracle returns. JPMorgan lists ~7,200 jobs (TotalJobsCount), so the
+// listing is cut off at MAX_JOBS_PER_SOURCE — the API's default order is newest-first.
+const PAGE_SIZE = 100;
+const CONCURRENCY = 4;
 
 /**
  * Generic adapter for Oracle Fusion Recruiting Cloud's public candidate-experience REST API
@@ -28,14 +34,21 @@ export const oracleFusionAdapter: Adapter = {
     // an empty result set instead of an error. A `keyword=""` clause does the same (confirmed
     // directly against the API: it returns zero results) — so an empty query.function omits
     // the clause entirely rather than passing it through empty.
-    const finder = query.function
-      ? `findReqs;siteNumber=${siteNumber},limit=25,keyword=${encodeURIComponent(`"${query.function}"`)}`
-      : `findReqs;siteNumber=${siteNumber},limit=25`;
-    const url = `https://${tenant}.fa.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList&finder=${finder}`;
-    const res = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!res.ok) throw new Error(`Oracle Fusion ${source.name}: HTTP ${res.status}`);
-    const data = (await res.json()) as { items: { requisitionList?: OracleRequisition[] }[] };
-    const reqs = data.items[0]?.requisitionList ?? [];
+    const keywordClause = query.function ? `,keyword=${encodeURIComponent(`"${query.function}"`)}` : "";
+    const fetchPage = async (offset: number) => {
+      const finder = `findReqs;siteNumber=${siteNumber},limit=${PAGE_SIZE},offset=${offset}${keywordClause}`;
+      const url = `https://${tenant}.fa.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList&finder=${finder}`;
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      if (!res.ok) throw new Error(`Oracle Fusion ${source.name}: HTTP ${res.status}`);
+      const data = (await res.json()) as { items: { TotalJobsCount?: number; requisitionList?: OracleRequisition[] }[] };
+      return { total: data.items[0]?.TotalJobsCount ?? 0, reqs: data.items[0]?.requisitionList ?? [] };
+    };
+
+    const first = await withRetry(() => fetchPage(0));
+    const rest = await mapLimit(remainingOffsets(first.total, PAGE_SIZE), CONCURRENCY, (offset) =>
+      withRetry(() => fetchPage(offset))
+    );
+    const reqs = [first, ...rest].flatMap((page) => page.reqs);
 
     return reqs.map((req) => ({
       title: req.Title,
