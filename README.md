@@ -83,7 +83,6 @@ real companies (see `lib/adapters/githubJobsList.ts`).
 | Airbnb, SoFi, Stripe, Adyen, Chime, Binance, Robinhood, Anthropic, Lyft, Figma, Datadog, Quince, TPG, KKR, DRW (board token isn't in the server-rendered HTML — found it inside DRW's own Next.js JS bundle after its CSP header tipped off that it was on Greenhouse at all), Asana, Gemini, Monzo, N26 | Greenhouse | ✅ working |
 | Spotify, Coda Payments, Nium | Lever | ✅ working |
 | Column, Air Wallex, Ramp, OpenAI, Handshake (their own careers, not the job-board platform), Mercor, Snowflake (career site is a Phenom People skin, but its `applyUrl` fields point straight at `jobs.ashbyhq.com/snowflake` — hits the generic adapter directly), Linear, Kraken (board name isn't the literal company name — "kraken" returns an empty jobs array; the real board is "kraken.com", found in the site's own outbound links) | Ashby | ✅ working |
-| Adobe, Capital One, Expedia, NVIDIA, Bank of America, Razer, Palo Alto Networks, Trend Micro, PropertyGuru, Postman (moved off Greenhouse — its `postman` board now 404s — found by watching the open-positions page's network requests) | Workday — paged through in full, 20 per request (Workday rejects a larger `limit`), 6 pages in flight at a time, capped at 2,500 jobs per source (the largest tenant, Palo Alto Networks, is ~1,400) | ✅ working |
 | Amazon / AWS | Amazon's own API, queried per country (US, UK, Singapore, Thailand), newest first, up to 1,000 per country (the US alone has 10,000+). The old hardcoded `loc_query=California` was silently ignored by the API and never narrowed anything. | ✅ working |
 | JPMorgan | Oracle Fusion Recruiting Cloud's public REST API, paged 100 at a time up to 2,500 of its ~7,200 jobs (newest first) | ✅ working |
 | Wise | SmartRecruiters' public, unauthenticated postings API (`api.smartrecruiters.com/v1/companies/{slug}/postings`) — new generic adapter type, reusable for any company on SmartRecruiters, not just Wise. Confirmed real Singapore-tagged postings among ~426 total. | ✅ working |
@@ -94,8 +93,7 @@ real companies (see `lib/adapters/githubJobsList.ts`).
 | BCG | Phenom People, but embeds its full result set as a server-rendered JSON blob (`phApp.ddo = {...}`) rather than needing tenant-guessing. Global listing, confirmed Singapore/Vietnam/Philippines/Indonesia/Malaysia postings — see `lib/adapters/html/bcg.ts`. | ✅ working, disabled by default |
 | Cisco, eBay, AirAsia, Circle | Same Phenom People `phApp.ddo` pattern as BCG above — shared fetch/parse logic in `lib/adapters/html/phenom.ts`. Cisco confirmed ~1,170 jobs globally (US + APAC); eBay confirmed ~466 jobs; AirAsia confirmed ~142 jobs with real Singapore/Malaysia/Indonesia/Philippines/Cambodia postings; Circle confirmed ~61 jobs with real Singapore-tagged postings. | ✅ working |
 | Deloitte, PwC (US portion), KPMG (US portion) | Radancy/TalentBrew (same family as Two Sigma/Intuit/BlackRock above) — server-renders its full listing. US-only; other member firms run on separate country sites. | ✅ working, disabled by default |
-| Accenture | Workday (`accenture.wd103.myworkdayjobs.com`) — generic adapter, confirmed real Singapore results | ✅ working, disabled by default |
-| PwC (APAC portion) | PwC's global Workday tenant (`pwc.wd3.myworkdayjobs.com`), searched for "Singapore"/"Bangkok" rather than pulling all ~4,500 jobs worldwide — merged with the US Radancy source above, see `lib/adapters/html/pwc.ts`. | ✅ working, disabled by default |
+| PwC (APAC portion) | PwC's global Workday tenant (`pwc.wd3.myworkdayjobs.com`), searched for "Singapore"/"Bangkok" rather than pulling all ~4,500 jobs worldwide — merged with the US Radancy source above, see `lib/adapters/html/pwc.ts`. **Now hits the same Cloudflare challenge as every other Workday tenant (see the blocked table below)**, and because the two halves are fetched together, enabling PwC currently fails the whole source rather than returning just the US half. | ⚠️ US half working, APAC half blocked; disabled by default |
 | EY | SAP SuccessFactors Career Site Builder (same template SAP's own career site used before it went behind Cloudflare, see below) — server-renders its full listing. Global site lists ~7,300 jobs; scoped via `locationsearch` to United States/Singapore/Thailand, all three confirmed with real matches — see `lib/adapters/html/ey.ts` and the shared `lib/adapters/html/successfactors.ts` helper. | ✅ working, disabled by default |
 | KKP (Kiatnakin Phatra Financial Group) | Also SuccessFactors Career Site Builder, same template — but unlike EY/SAP, scoping to `locationsearch=Thailand` actually *undercounts* (~75 of 125 jobs), because some rows render their location in Thai script ("กรุงเทพมหานคร, ไทย") rather than English "Thailand". KKP only hires in Thailand anyway, so the adapter just pulls the full unfiltered listing instead — see `lib/adapters/html/kkp.ts`. ~125 jobs confirmed, all Thailand. | ✅ working |
 | KPMG (Thailand portion) | Adobe Experience Manager — job postings are individual content pages listed directly on the Thailand "Experienced Hires" page, not run through a separate ATS — merged with the US Radancy source above, see `lib/adapters/html/kpmg.ts`. | ✅ working, disabled by default |
@@ -116,10 +114,11 @@ real companies (see `lib/adapters/githubJobsList.ts`).
 | Blackstone | — | Cloudflare mitigation — `cf-mitigated: challenge` header on every request. Same policy as Bain/Kearney above. |
 | SCB (Siam Commercial Bank) | — | Returns a 403 "The request is blocked" page on every path, from an Azure Front Door WAF (confirmed via the `x-azure-ref` response header) — a new bot-mitigation vendor for this list, same policy as the Cloudflare/Akamai/PerimeterX entries elsewhere: not attempting a bypass. |
 | Carlyle Group | — | Cloudflare "Attention Required!" block page on every request. Same policy as Bain/Kearney above. |
+| Workday-backed sources: Adobe, Capital One, Expedia, NVIDIA, Bank of America, Razer, Palo Alto Networks, Trend Micro, PropertyGuru, Postman, Accenture | — | These all worked — the adapter paged through each tenant in full (~8,100 jobs between the first ten) — until Cloudflare started putting a **managed bot challenge** in front of Workday's job API around Nov 16, 2026. Every request from Node now gets `HTTP 429` with `cf-mitigated: challenge` and a "Security Check — enable JavaScript and cookies" page, from a GitHub runner and a home connection alike. It isn't a rate limit: requests sent one at a time, 1.5s apart, fail identically, while the same request from curl happens to pass. That's a decision about what kind of client is asking, i.e. active bot-mitigation, so it isn't worked around — no fingerprint-matching, header spoofing, shelling out to a client the filter prefers, or driving a real browser through the challenge. Same policy as SAP below. `lib/adapters/workday.ts` is kept (with pagination, a shared concurrency cap, and 429 backoff), and each source's original `{host}\|{site}` identifier is in a comment in `lib/defaultSources.ts`, so restoring them is a one-line change per source if the challenge lifts. |
 | SAP | — | `jobs.sap.com` (SuccessFactors, the same template as EY — it worked, ~220 jobs across US/Singapore/Thailand) is now behind a Cloudflare managed challenge: every request gets a 403 with `cf-mitigated: challenge`, from both a GitHub runner and a local machine. Not attempting a bypass. `lib/adapters/html/sap.ts` is kept in case it lifts. |
 | LinkedIn (their own careers) | — | Used to be a Greenhouse board; that board now 404s and `careers.linkedin.com` sends every open-roles link to `linkedin.com/jobs` — the same job-board platform as the blocked "LinkedIn" social source, so there's nothing left to scan without going through it. |
 
-63 of 102 default company sources are live and working; the rest are visible but disabled on
+52 of 102 default company sources are live and working; the rest are visible but disabled on
 `/sources` with the specific reason noted above rather than a generic "not yet supported." (That
 count is `category: "company"` sources only — the GitHub source above is `category: "social"`,
 alongside LinkedIn/Handshake/Glassdoor/Indeed, so it's not in the denominator despite being the
@@ -128,7 +127,8 @@ one social source that actually works.)
 All 10 consulting firms (McKinsey, Bain, BCG, Deloitte, Accenture, PwC, EY, Kearney, L.E.K.,
 KPMG) were investigated for US and APAC (Singapore/Thailand especially) coverage; 6 came back
 with real working adapters (confirmed 140 Thailand-tagged and 130 Singapore-tagged postings in
-testing) and 4 are genuinely bot-mitigated. Every consulting source ships `enabled: false` by
+testing) and 4 were genuinely bot-mitigated. Since then Accenture (Workday) has joined the
+blocked group and PwC's APAC half is blocked too, leaving 4 fully working plus PwC's US half. Every consulting source ships `enabled: false` by
 default regardless of adapter status — unlike every other group on `/sources`, "adapter ready"
 here doesn't mean "on by default." Toggle them on by hand if you want them scanned.
 
@@ -174,22 +174,28 @@ is a separate, additional background layer, not a replacement for it.
 
 What the daily run actually does, and doesn't do:
 
-- It scans every source that's **enabled in the code defaults** (`lib/defaultSources.ts`, 58
+- It scans every source that's **enabled in the code defaults** (`lib/defaultSources.ts`, 48
   sources today) with no function filter — your own on/off choices in `/sources` aren't visible
   to it. A run takes about 20–90 seconds.
-- **Complete listings, not samples.** The big Workday/Oracle/Amazon/Google sources are paged
-  through (see the table below) rather than cut off at their first 20–25 results.
+- **Complete listings, not samples.** The big Oracle (JPMorgan), Amazon and Google sources are
+  paged through (see the table below) rather than cut off at their first 20–25 results.
 - **Closed postings go away.** "Sync GitHub snapshot" adds new jobs *and* drops ones the
   snapshot no longer lists — except anything you saved or applied to, companies the snapshot
   doesn't cover, and companies whose source errored in that run. The dashboard's last-sync
   record includes how many were dropped (`jobsRemoved`).
-- **Failures are loud.** Each failing source is a warning annotation and a row in the run's
-  summary (flagged when it also failed the previous run); the job *fails* — emailing you and
-  skipping the commit — if the scan returns zero jobs, more than 25% of sources fail, or the job
-  count falls below 70% of the previous snapshot.
+- **Failures are loud, but one flaky source doesn't take the day down.** Each failing source is
+  a warning annotation and a row in the run's summary, with how many runs in a row it has failed.
+  A failing source's last-known jobs are *kept* in the snapshot for up to 3 consecutive failed
+  runs (then dropped, so a permanently dead source can't leave stale postings forever). The job
+  *fails* — emailing you and skipping the commit — only if the scan returns zero jobs, more than
+  25% of sources fail, or the healthy, enabled sources together return under 70% of what the same
+  sources had in the previous snapshot (it compares like with like, so turning a source off or
+  one source erroring doesn't trip it — only silent shrinkage does). This is what caught the
+  Workday block: for two days the daily run failed instead of overwriting the good snapshot with
+  a hollowed-out one.
 - **Cheap to store.** The snapshot is sorted by job id with one job per line, and a job keeps
   its first-seen `discoveredAt` across days, so a day-to-day diff is only the jobs that actually
-  changed (~400 lines, not ~270,000). It's ~18 MB raw, ~1.2 MB gzipped.
+  changed (~400 lines, not ~270,000). It's ~12 MB raw, ~0.9 MB gzipped.
 - **No alerts yet.** There's no email/push when new jobs appear, and no "new since yesterday"
   view — the snapshot only changes what "Sync" pulls in. GitHub's own failure email is the only
   notification.
@@ -228,11 +234,12 @@ have two independent local states, same as they would locally.
 3. Every future push to `main` auto-deploys.
 4. `/api/scan` runs as a Vercel serverless function — `app/api/scan/route.ts` sets
    `maxDuration = 60` (Hobby's max for a standard function) since a full scan across every
-   enabled source has taken up to ~70s in testing. If "Scan now" times out with a lot of
+   enabled source took up to ~70s when it included the Workday sources (now blocked — a full scan
+   is ~20s). If "Scan now" times out with a lot of
    sources enabled, turn on **Fluid Compute** in the project's Settings → Functions (still
    free on Hobby) and bump `maxDuration` to `300`. Scans are now paginated, so "Scan now" with
    the function filter on "Any function" fetches whole listings and takes longer than one with a
-   function selected (which narrows Workday/Oracle/Amazon/Google server-side) — if it's close to
+   function selected (which narrows Oracle/Amazon/Google server-side) — if it's close to
    the limit, pick a function, or lean on the daily snapshot instead.
 
 The daily GitHub Actions snapshot keeps working independently of whether (or where) the app is
@@ -245,7 +252,7 @@ npm run test
 ```
 
 Vitest, `node` environment, no DOM/component tests — coverage is the pure extraction/filtering
-logic in `lib/`, not the UI. 42 tests across 5 files:
+logic in `lib/`, not the UI. 60 tests across 6 files:
 
 - `lib/extract.test.ts` — `extractWorkAuthorization` (US-only scoping, citizen-only/sponsorship
   detection, the two phrasing bugs caught during manual testing: rigid "security clearance
@@ -260,8 +267,14 @@ logic in `lib/`, not the UI. 42 tests across 5 files:
   and `pruneClosed` (drops closed postings but never saved/applied ones, never companies the
   snapshot doesn't cover or whose source errored, and never GitHub-list jobs when that list
   didn't come through).
-- `lib/adapters/paginate.test.ts` — the shared pagination helpers: offset math, the per-source
-  ceiling, bounded concurrency, order preservation, and retry.
+- `lib/adapters/paginate.test.ts` — the shared pagination/retry helpers: offset math, the
+  per-source ceiling, bounded concurrency (per list and shared across sources), order
+  preservation, retry with backoff that honors `Retry-After`, no retry for errors that can't
+  recover (404/403), and Cloudflare bot challenges — recognized by their `cf-mitigated` header,
+  named as such, and never retried.
+- `lib/snapshotGuard.test.ts` — the daily scan's shrink check compares like with like: jobs from
+  sources that were turned off or that errored this run don't count against it, but silent
+  shrinkage in a healthy source still does.
 - `lib/defaultSources.test.ts` — data-integrity checks on the industry re-tagging: no source is
   still on the old generic "Tech" catch-all, every source's industry is a known differentiated
   value, and the specific companies that moved (Big Tech/E-Commerce/Social Media/merged into
@@ -277,9 +290,11 @@ comma" approach left most postings unclassified in practice.
 
 ## Adding a company adapter
 
-If a career site runs on Greenhouse, Lever, Workday, Ashby, SmartRecruiters, or Oracle Fusion
-Recruiting Cloud, add it to `lib/defaultSources.ts` with the right `identifier` — the existing
-generic adapter will just work. (Community-maintained GitHub job lists in the "Simplify Jobs"
+If a career site runs on Greenhouse, Lever, Ashby, SmartRecruiters, or Oracle Fusion Recruiting
+Cloud, add it to `lib/defaultSources.ts` with the right `identifier` — the existing
+generic adapter will just work. (Workday used to be on this list too, but it's now behind a
+Cloudflare bot challenge — see the blocked table — so verify a new Workday tenant before counting
+on it.) Community-maintained GitHub job lists in the "Simplify Jobs"
 format work the same way, via the `github-jobs-list` adapter and an `owner/repo` identifier.)
 If the API paginates, use the helpers in `lib/adapters/paginate.ts` rather than taking just the
 first page: every job lands in the browser's local store, so cap a source at
