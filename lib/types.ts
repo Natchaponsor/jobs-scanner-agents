@@ -123,6 +123,12 @@ export interface ScanRun {
   /** Set only by a GitHub snapshot sync: how many locally-held jobs the snapshot no longer listed
    *  (closed postings) and were dropped — see pruneClosed in lib/mergeJobs.ts. */
   jobsRemoved?: number;
+  /** Set only by scripts/scan.ts: for each source that errored, how many runs in a row it has
+   *  now failed (1 = just this run). Drives how long its last-known jobs are carried forward. */
+  failStreaks?: Record<string, number>;
+  /** Set only by scripts/scan.ts: sources that errored this run whose jobs from the previous
+   *  snapshot were kept in this one rather than dropped. */
+  carriedForward?: string[];
   errors: { sourceName: string; message: string }[];
 }
 

@@ -10,10 +10,16 @@
  *    in adapter-completion order, so nearly every line "changed" every day (~270k-line diffs).
  *  - Stable first-seen dates: a job already in the previous snapshot keeps its `discoveredAt`.
  *    Sources that don't publish a posting date otherwise get stamped "now" on every scan.
+ *  - Carry-forward: a source that errors (a rate limit, a blip) keeps its last-known jobs from
+ *    the previous snapshot for up to MAX_CARRY_RUNS consecutive failed runs, instead of making the
+ *    whole snapshot shrink — which would trip the guardrail below and stop *every* source from
+ *    updating that day. After that it's dropped, so a source that's permanently gone can't leave
+ *    stale postings in the snapshot forever.
  *  - Loud failures: every failing source becomes a GitHub Actions warning annotation and a row
  *    in the run summary (flagged when it was also failing last run), instead of being buried in
  *    the JSON of a green run.
- *  - Guardrails: refuses to overwrite the snapshot with an empty or much smaller one, or one
+ *  - Guardrails: refuses to overwrite the snapshot with an empty or much smaller one (compared
+ *    like-for-like: only sources that are enabled and healthy — see lib/snapshotGuard.ts), or one
  *    where too many sources failed — a bad run shouldn't wipe out good data, since the app
  *    treats a snapshot as the source of truth for what's still open.
  *
@@ -22,6 +28,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { DEFAULT_SOURCES } from "../lib/defaultSources";
 import { runScan } from "../lib/runScan";
+import { shrinkCheck } from "../lib/snapshotGuard";
 import type { Job, ScanRun } from "../lib/types";
 
 const OUTPUT = "data/jobs.json";
@@ -29,6 +36,8 @@ const OUTPUT = "data/jobs.json";
 const MIN_JOBS_RATIO = 0.7;
 /** Refuse to publish when more than this fraction of the scanned sources errored. */
 const MAX_ERROR_RATIO = 0.25;
+/** How many consecutive failed runs a source's last-known jobs are kept for. */
+const MAX_CARRY_RUNS = 3;
 
 interface Snapshot {
   jobs: Job[];
@@ -74,23 +83,64 @@ async function main() {
     const firstSeen = new Map(previous.jobs.map((j) => [j.id, j.discoveredAt]));
     for (const job of result.jobs) job.discoveredAt = firstSeen.get(job.id) ?? job.discoveredAt;
   }
+
+  const freshJobCount = result.jobs.length; // before carry-forward: healthy, enabled sources only
+
+  // Carry forward last-known jobs for failed sources (see header comment).
+  const failStreaks: Record<string, number> = {};
+  const carriedForward: string[] = [];
+  if (previous && result.run.errors.length > 0) {
+    const currentIds = new Set(result.jobs.map((j) => j.id));
+    for (const { sourceName } of result.run.errors) {
+      const streak = (previous.run.failStreaks?.[sourceName] ?? 0) + 1;
+      failStreaks[sourceName] = streak;
+      if (streak > MAX_CARRY_RUNS) continue;
+      // The GitHub list attributes jobs to many companies, so its jobs are found by type; every
+      // other source's jobs are the "company" ones named after it.
+      const isSocial = DEFAULT_SOURCES.find((s) => s.name === sourceName)?.category === "social";
+      const stale = previous.jobs.filter(
+        (j) => !currentIds.has(j.id) && (isSocial ? j.sourceType === "social" : j.sourceType === "company" && j.sourceName === sourceName)
+      );
+      if (stale.length === 0) continue;
+      result.jobs.push(...stale);
+      carriedForward.push(sourceName);
+    }
+  } else {
+    for (const { sourceName } of result.run.errors) failStreaks[sourceName] = 1;
+  }
   result.jobs.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 
   const { run, jobs } = result;
+  if (result.run.errors.length > 0) run.failStreaks = failStreaks;
+  if (carriedForward.length > 0) run.carriedForward = carriedForward;
+  run.jobsFound = jobs.length;
   console.log(`Scanned ${run.sourcesScanned} sources, found ${jobs.length} jobs, ${run.errors.length} error(s).`);
 
   const stillFailing = new Set((previous?.run.errors ?? []).map((e) => e.sourceName));
+  const carriedSet = new Set(carriedForward);
   for (const err of run.errors) {
     const repeat = stillFailing.has(err.sourceName);
-    console.warn(`::warning title=Source failed${repeat ? " (again)" : ""}::${err.sourceName}: ${err.message}`);
+    const streak = failStreaks[err.sourceName] ?? 1;
+    const note = carriedSet.has(err.sourceName)
+      ? ` (last-known jobs kept, failure ${streak}/${MAX_CARRY_RUNS})`
+      : streak > MAX_CARRY_RUNS
+        ? ` (failed ${streak} runs in a row; its jobs have been dropped from the snapshot)`
+        : "";
+    console.warn(`::warning title=Source failed${repeat ? " (again)" : ""}::${err.sourceName}: ${err.message}${note}`);
   }
 
   if (jobs.length === 0) fail("The scan returned zero jobs.");
   if (run.errors.length / run.sourcesScanned > MAX_ERROR_RATIO) {
     fail(`${run.errors.length} of ${run.sourcesScanned} sources failed (limit ${Math.round(MAX_ERROR_RATIO * 100)}%): ${run.errors.map((e) => e.sourceName).join(", ")}.`);
   }
-  if (previous && jobs.length < previous.jobs.length * MIN_JOBS_RATIO) {
-    fail(`Only ${jobs.length} jobs found vs ${previous.jobs.length} in the previous snapshot (minimum ${Math.round(MIN_JOBS_RATIO * 100)}%).`);
+  if (previous) {
+    const erroredNames = new Set(run.errors.map((e) => e.sourceName));
+    const socialHealthy = DEFAULT_SOURCES.some((s) => s.category === "social" && s.enabled && !erroredNames.has(s.name));
+    const enabledCompanyNames = new Set(enabled.filter((s) => s.category === "company").map((s) => s.name));
+    const check = shrinkCheck({ previousJobs: previous.jobs, freshJobCount, enabledCompanyNames, erroredNames, socialHealthy, minRatio: MIN_JOBS_RATIO });
+    if (!check.ok) {
+      fail(`Only ${check.actual} jobs from healthy sources vs ${check.expected} for the same sources in the previous snapshot (minimum ${Math.round(MIN_JOBS_RATIO * 100)}%).`);
+    }
   }
 
   const previousIds = new Set((previous?.jobs ?? []).map((j) => j.id));
@@ -102,7 +152,11 @@ async function main() {
   writeFileSync(OUTPUT, serialize(run, jobs));
   console.log(`Wrote ${OUTPUT} (+${added} / -${removed} vs previous)`);
 
-  const rows = run.errors.map((e) => `| ${e.sourceName} | ${stillFailing.has(e.sourceName) ? "yes" : "new"} | ${e.message.replace(/\|/g, "\\|")} |`);
+  const rows = run.errors.map((e) => {
+    const streak = failStreaks[e.sourceName] ?? 1;
+    const kept = carriedSet.has(e.sourceName) ? "last-known jobs kept" : streak > MAX_CARRY_RUNS ? "dropped" : "none to keep";
+    return `| ${e.sourceName} | ${streak} | ${kept} | ${e.message.replace(/\|/g, "\\|")} |`;
+  });
   summary(
     [
       `## ✅ Snapshot published: ${jobs.length.toLocaleString()} jobs`,
@@ -111,7 +165,7 @@ async function main() {
       "",
       run.errors.length === 0
         ? "No source errors."
-        : `### ⚠️ ${run.errors.length} source(s) failed\n\n| Source | Failed last run too? | Error |\n|---|---|---|\n${rows.join("\n")}`,
+        : `### ⚠️ ${run.errors.length} source(s) failed\n\n| Source | Runs failed in a row | Jobs | Error |\n|---|---|---|---|\n${rows.join("\n")}`,
     ].join("\n")
   );
 }
