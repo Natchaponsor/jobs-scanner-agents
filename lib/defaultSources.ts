@@ -14,6 +14,17 @@ import type { ScanSource } from "./types";
  * - custom-amazon: unused, adapter is hardcoded to amazon.jobs
  * - unimplemented: the company's career site URL, kept for reference / future wiring
  *
+ * WORKDAY IS BLOCKED (since ~2026-11-16): Cloudflare started putting a managed bot challenge in
+ * front of Workday's candidate-facing job API (`/wday/cxs/.../jobs`). Node's requests — every
+ * request, even one sent minutes after the last — now get `HTTP 429` with `cf-mitigated:
+ * challenge` and a "Security Check / enable JavaScript and cookies" page; it isn't a rate limit
+ * (sequential requests 1.5s apart fail the same), it's a decision about the client. That's active
+ * bot-mitigation, so — same policy as SAP/Bain/Blackstone — it isn't worked around (no
+ * fingerprint-matching, header spoofing, or challenge-solving), and every Workday-backed source
+ * below is `unimplemented`. The adapter (lib/adapters/workday.ts, with full pagination) is kept: to
+ * restore a source if the challenge lifts, set `adapterType: "workday"`, `enabled: true`, and put
+ * the `{host}|{siteSlug}` back as its identifier (it's recorded in the comment above each entry).
+ *
  * `group` organizes the /sources settings page (see SourceGroup in lib/types.ts) — distinct
  * from `industry`, which is job-level metadata for the dashboard's industry filter.
  *
@@ -44,8 +55,10 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // --- Company sites: confirmed working adapters ---
   { id: "co-airbnb", category: "company", name: "Airbnb", identifier: "airbnb", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Travel", group: "Travel and Ride Share", majorLocations: ["United States", "Singapore", "Thailand"] },
   { id: "co-sofi", category: "company", name: "SoFi", identifier: "sofi", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech", majorLocations: ["United States"] },
-  { id: "co-adobe", category: "company", name: "Adobe", identifier: "adobe.wd5.myworkdayjobs.com|external_experienced", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["United States"] },
-  { id: "co-capitalone", category: "company", name: "Capital One", identifier: "capitalone.wd12.myworkdayjobs.com|Capital_One", adapterType: "workday", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance", majorLocations: ["United States"] },
+  // Workday `adobe.wd5.myworkdayjobs.com|external_experienced` — blocked: Cloudflare managed challenge since ~2026-11-16 (see the note at the top of this file).
+  { id: "co-adobe", category: "company", name: "Adobe", identifier: "https://adobe.wd5.myworkdayjobs.com/external_experienced", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Software", group: "Software", majorLocations: ["United States"] },
+  // Workday `capitalone.wd12.myworkdayjobs.com|Capital_One` — blocked: Cloudflare managed challenge since ~2026-11-16 (see the note at the top of this file).
+  { id: "co-capitalone", category: "company", name: "Capital One", identifier: "https://capitalone.wd12.myworkdayjobs.com/Capital_One", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance", majorLocations: ["United States"] },
   { id: "co-amazon", category: "company", name: "Amazon and AWS", identifier: "amazon", adapterType: "custom-amazon", enabled: true, isDefault: true, industry: "Big Tech", group: "Big Tech", majorLocations: ["United States"] },
   { id: "co-column", category: "company", name: "Column", identifier: "column", adapterType: "ashby", enabled: true, isDefault: true, industry: "Finance", group: "Payments & FinTech", majorLocations: ["United States"] },
   { id: "co-google", category: "company", name: "Google", identifier: "co-google", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Big Tech", group: "Big Tech", majorLocations: ["United States", "Singapore"] },
@@ -93,31 +106,39 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   // the open-positions page's network requests, which load postman.com's own
   // /_mk-www-next/api-cache/careers-jobs.json feed whose job URLs point at
   // postman.wd108.myworkdayjobs.com/careers. Generic Workday adapter, ~37 jobs.
-  { id: "co-postman", category: "company", name: "Postman", identifier: "postman.wd108.myworkdayjobs.com|careers", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["United States"] },
+  // Workday `postman.wd108.myworkdayjobs.com|careers` — blocked: Cloudflare managed challenge since ~2026-11-16 (see the note at the top of this file).
+  { id: "co-postman", category: "company", name: "Postman", identifier: "https://postman.wd108.myworkdayjobs.com/careers", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Software", group: "Software", majorLocations: ["United States"] },
   { id: "co-linear", category: "company", name: "Linear", identifier: "Linear", adapterType: "ashby", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["United States"] },
-  { id: "co-razer", category: "company", name: "Razer", identifier: "razer.wd3.myworkdayjobs.com|Careers", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["Singapore"] },
+  // Workday `razer.wd3.myworkdayjobs.com|Careers` — blocked: Cloudflare managed challenge since ~2026-11-16 (see the note at the top of this file).
+  { id: "co-razer", category: "company", name: "Razer", identifier: "https://razer.wd3.myworkdayjobs.com/Careers", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Software", group: "Software", majorLocations: ["Singapore"] },
   // Snowflake's career site is a Phenom People skin, but its jobs are actually hosted on
   // Ashby (its embedded phApp.ddo blob's applyUrl fields point to jobs.ashbyhq.com/snowflake)
   // — hits the generic Ashby adapter directly, no bespoke scraping needed. Confirmed real
   // Singapore-tagged postings among ~392 total.
   { id: "co-snowflake", category: "company", name: "Snowflake", identifier: "snowflake", adapterType: "ashby", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["United States", "Singapore"] },
-  { id: "co-paloalto", category: "company", name: "Palo Alto Networks", identifier: "paloaltonetworks.wd5.myworkdayjobs.com|panwexternalcareers", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["United States", "Singapore"] },
-  { id: "co-trendmicro", category: "company", name: "Trend Micro", identifier: "trendmicro.wd3.myworkdayjobs.com|External", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["Japan", "Singapore"] },
-  { id: "co-propertyguru", category: "company", name: "PropertyGuru", identifier: "propertyguru.wd105.myworkdayjobs.com|PropertyGuru", adapterType: "workday", enabled: true, isDefault: true, industry: "Software", group: "Software", majorLocations: ["Singapore"] },
+  // Workday `paloaltonetworks.wd5.myworkdayjobs.com|panwexternalcareers` — blocked: Cloudflare managed challenge since ~2026-11-16 (see the note at the top of this file).
+  { id: "co-paloalto", category: "company", name: "Palo Alto Networks", identifier: "https://paloaltonetworks.wd5.myworkdayjobs.com/panwexternalcareers", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Software", group: "Software", majorLocations: ["United States", "Singapore"] },
+  // Workday `trendmicro.wd3.myworkdayjobs.com|External` — blocked: Cloudflare managed challenge since ~2026-11-16 (see the note at the top of this file).
+  { id: "co-trendmicro", category: "company", name: "Trend Micro", identifier: "https://trendmicro.wd3.myworkdayjobs.com/External", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Software", group: "Software", majorLocations: ["Japan", "Singapore"] },
+  // Workday `propertyguru.wd105.myworkdayjobs.com|PropertyGuru` — blocked: Cloudflare managed challenge since ~2026-11-16 (see the note at the top of this file).
+  { id: "co-propertyguru", category: "company", name: "PropertyGuru", identifier: "https://propertyguru.wd105.myworkdayjobs.com/PropertyGuru", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Software", group: "Software", majorLocations: ["Singapore"] },
   { id: "co-quince", category: "company", name: "Quince", identifier: "quince", adapterType: "greenhouse", enabled: true, isDefault: true, industry: "E-Commerce", group: "E-Commerce", majorLocations: ["United States", "Thailand"] },
   // LinkedIn's own careers: used to be a Greenhouse board, but that board now 404s and
   // careers.linkedin.com sends every "open roles" link to linkedin.com/jobs — the same job-board
   // platform as the "LinkedIn" social source above, which actively blocks automated access.
   // Nothing left to scan without going through it, so this stays unimplemented.
   { id: "co-linkedin", category: "company", name: "LinkedIn", identifier: "https://careers.linkedin.com/", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Social Media", group: "Social Media", majorLocations: ["United States"] },
-  { id: "co-expedia", category: "company", name: "Expedia", identifier: "expedia.wd108.myworkdayjobs.com|search", adapterType: "workday", enabled: true, isDefault: true, industry: "Travel", group: "Travel and Ride Share", majorLocations: ["United States"] },
+  // Workday `expedia.wd108.myworkdayjobs.com|search` — blocked: Cloudflare managed challenge since ~2026-11-16 (see the note at the top of this file).
+  { id: "co-expedia", category: "company", name: "Expedia", identifier: "https://expedia.wd108.myworkdayjobs.com/search", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Travel", group: "Travel and Ride Share", majorLocations: ["United States"] },
   // AirAsia: mycareer.airasia.com is on Phenom People, same embedded `phApp.ddo` pattern as
   // BCG/Cisco/eBay/Snowflake above — see lib/adapters/html/phenom.ts and
   // lib/adapters/html/airasia.ts. ~142 jobs, confirmed real Singapore/Malaysia/Indonesia/
   // Philippines/Cambodia postings.
   { id: "co-airasia", category: "company", name: "AirAsia", identifier: "co-airasia", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Travel", group: "Travel and Ride Share", majorLocations: ["Malaysia", "Singapore", "Thailand"] },
-  { id: "co-nvidia", category: "company", name: "NVIDIA", identifier: "nvidia.wd5.myworkdayjobs.com|NVIDIAExternalCareerSite", adapterType: "workday", enabled: true, isDefault: true, industry: "Big Tech", group: "Big Tech", majorLocations: ["United States"] },
-  { id: "co-bofa", category: "company", name: "Bank of America", identifier: "ghr.wd1.myworkdayjobs.com|lateral-us", adapterType: "workday", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance", majorLocations: ["United States"] },
+  // Workday `nvidia.wd5.myworkdayjobs.com|NVIDIAExternalCareerSite` — blocked: Cloudflare managed challenge since ~2026-11-16 (see the note at the top of this file).
+  { id: "co-nvidia", category: "company", name: "NVIDIA", identifier: "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Big Tech", group: "Big Tech", majorLocations: ["United States"] },
+  // Workday `ghr.wd1.myworkdayjobs.com|lateral-us` — blocked: Cloudflare managed challenge since ~2026-11-16 (see the note at the top of this file).
+  { id: "co-bofa", category: "company", name: "Bank of America", identifier: "https://ghr.wd1.myworkdayjobs.com/lateral-us", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance", majorLocations: ["United States"] },
   { id: "co-intuit", category: "company", name: "Intuit", identifier: "co-intuit", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance", majorLocations: ["United States"] },
   { id: "co-blackrock", category: "company", name: "Blackrock", identifier: "co-blackrock", adapterType: "html-scrape", enabled: true, isDefault: true, industry: "Finance", group: "Banks & Traditional Finance", majorLocations: ["United States", "Singapore"] },
   // HSBC: mycareer.hsbc.com/en_GB/external/SearchJobs is the same Radancy/TalentBrew platform
@@ -249,7 +270,8 @@ export const DEFAULT_SOURCES: ScanSource[] = [
   { id: "co-deloitte", category: "company", name: "Deloitte", identifier: "co-deloitte", adapterType: "html-scrape", enabled: false, isDefault: true, industry: "Consulting", group: "Tech Consulting", majorLocations: ["United Kingdom"] },
   // Accenture: standard Workday (accenture.wd103.myworkdayjobs.com), confirmed working with
   // real Singapore results via the generic adapter — no bespoke code needed.
-  { id: "co-accenture", category: "company", name: "Accenture", identifier: "accenture.wd103.myworkdayjobs.com|AccentureCareers", adapterType: "workday", enabled: false, isDefault: true, industry: "Consulting", group: "Tech Consulting", majorLocations: ["Ireland", "Singapore"] },
+  // Workday `accenture.wd103.myworkdayjobs.com|AccentureCareers` — blocked: Cloudflare managed challenge since ~2026-11-16 (see the note at the top of this file).
+  { id: "co-accenture", category: "company", name: "Accenture", identifier: "https://accenture.wd103.myworkdayjobs.com/AccentureCareers", adapterType: "unimplemented", enabled: false, isDefault: true, industry: "Consulting", group: "Tech Consulting", majorLocations: ["Ireland", "Singapore"] },
   // PwC: like KPMG below, no single global site — merges jobs.us.pwc.com (Radancy, US) with
   // PwC's global Workday tenant (pwc.wd3.myworkdayjobs.com, searched for Singapore/Bangkok
   // rather than pulling all ~4,500 jobs worldwide) — see lib/adapters/html/pwc.ts.

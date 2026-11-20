@@ -1,5 +1,5 @@
 import type { Adapter } from "./types";
-import { mapLimit, remainingOffsets, withRetry } from "./paginate";
+import { assertOk, mapLimit, remainingOffsets, withRetry } from "./paginate";
 
 interface AmazonJob {
   title: string;
@@ -21,6 +21,7 @@ interface AmazonJob {
 const COUNTRIES = ["USA", "GBR", "SGP", "THA"];
 const PAGE_SIZE = 100;
 const MAX_PER_COUNTRY = 1000;
+const RETRY = { attempts: 4, baseDelayMs: 1000 };
 
 /** Amazon's own career-site JSON API (not an off-the-shelf ATS). */
 export const amazonAdapter: Adapter = {
@@ -38,17 +39,17 @@ export const amazonAdapter: Adapter = {
       const res = await fetch(`https://www.amazon.jobs/en/search.json?${params}`, {
         headers: { Accept: "application/json", "Accept-Encoding": "gzip, deflate, br" },
       });
-      if (!res.ok) throw new Error(`Amazon (${country}): HTTP ${res.status}`);
+      assertOk(res, `Amazon (${country})`);
       return (await res.json()) as { hits?: number; jobs: AmazonJob[] };
     };
 
     const perCountry = await Promise.all(
       COUNTRIES.map(async (country) => {
-        const first = await withRetry(() => fetchPage(country, 0));
+        const first = await withRetry(() => fetchPage(country, 0), RETRY);
         const rest = await mapLimit(
           remainingOffsets(first.hits ?? 0, PAGE_SIZE, MAX_PER_COUNTRY),
           4,
-          (offset) => withRetry(() => fetchPage(country, offset))
+          (offset) => withRetry(() => fetchPage(country, offset), RETRY)
         );
         return [first, ...rest].flatMap((page) => page.jobs);
       })

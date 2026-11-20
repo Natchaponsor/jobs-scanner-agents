@@ -2,7 +2,7 @@ import * as cheerio from "cheerio";
 import type { Adapter } from "../types";
 import type { RawJob } from "../../extract";
 import type { YoeBucket } from "../../types";
-import { mapLimit, withRetry } from "../paginate";
+import { assertOk, mapLimit, withRetry } from "../paginate";
 
 const BASE = "https://www.google.com/about/careers/applications/";
 
@@ -27,6 +27,7 @@ const PAGE_SIZE = 20;
 const LOCATIONS = ["United States", "United Kingdom", "Singapore", "Thailand"];
 const MAX_PAGES_PER_LOCATION = 25;
 const BATCH = 5;
+const RETRY = { attempts: 4, baseDelayMs: 1000 };
 
 /**
  * careers.google.com server-renders its search results into the initial HTML response
@@ -43,7 +44,7 @@ export const googleAdapter: Adapter = {
           Accept: "text/html",
         },
       });
-      if (!res.ok) throw new Error(`Google (${location}): HTTP ${res.status}`);
+      assertOk(res, `Google (${location})`);
       return parseResults(await res.text());
     };
 
@@ -51,7 +52,7 @@ export const googleAdapter: Adapter = {
       const jobs: RawJob[] = [];
       for (let start = 1; start <= MAX_PAGES_PER_LOCATION; start += BATCH) {
         const pages = Array.from({ length: Math.min(BATCH, MAX_PAGES_PER_LOCATION - start + 1) }, (_, i) => start + i);
-        const results = await mapLimit(pages, BATCH, (page) => withRetry(() => fetchPage(location, page)));
+        const results = await mapLimit(pages, BATCH, (page) => withRetry(() => fetchPage(location, page), RETRY));
         for (const batch of results) jobs.push(...batch);
         if (results.some((batch) => batch.length < PAGE_SIZE)) break;
       }

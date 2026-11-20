@@ -1,5 +1,5 @@
 import type { Adapter } from "./types";
-import { mapLimit, remainingOffsets, withRetry } from "./paginate";
+import { assertOk, mapLimit, remainingOffsets, withRetry } from "./paginate";
 
 interface OracleRequisition {
   Id: string;
@@ -17,6 +17,7 @@ interface OracleRequisition {
 // listing is cut off at MAX_JOBS_PER_SOURCE — the API's default order is newest-first.
 const PAGE_SIZE = 100;
 const CONCURRENCY = 4;
+const RETRY = { attempts: 4, baseDelayMs: 1000 };
 
 /**
  * Generic adapter for Oracle Fusion Recruiting Cloud's public candidate-experience REST API
@@ -39,14 +40,14 @@ export const oracleFusionAdapter: Adapter = {
       const finder = `findReqs;siteNumber=${siteNumber},limit=${PAGE_SIZE},offset=${offset}${keywordClause}`;
       const url = `https://${tenant}.fa.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList&finder=${finder}`;
       const res = await fetch(url, { headers: { Accept: "application/json" } });
-      if (!res.ok) throw new Error(`Oracle Fusion ${source.name}: HTTP ${res.status}`);
+      assertOk(res, `Oracle Fusion ${source.name}`);
       const data = (await res.json()) as { items: { TotalJobsCount?: number; requisitionList?: OracleRequisition[] }[] };
       return { total: data.items[0]?.TotalJobsCount ?? 0, reqs: data.items[0]?.requisitionList ?? [] };
     };
 
-    const first = await withRetry(() => fetchPage(0));
+    const first = await withRetry(() => fetchPage(0), RETRY);
     const rest = await mapLimit(remainingOffsets(first.total, PAGE_SIZE), CONCURRENCY, (offset) =>
-      withRetry(() => fetchPage(offset))
+      withRetry(() => fetchPage(offset), RETRY)
     );
     const reqs = [first, ...rest].flatMap((page) => page.reqs);
 

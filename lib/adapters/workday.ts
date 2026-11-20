@@ -1,5 +1,5 @@
 import type { Adapter } from "./types";
-import { mapLimit, remainingOffsets, withRetry } from "./paginate";
+import { assertOk, createLimiter, mapLimit, remainingOffsets, withRetry } from "./paginate";
 
 interface WorkdayJob {
   title: string;
@@ -14,9 +14,15 @@ interface WorkdayPage {
 }
 
 // Workday's cxs API returns nothing at all for a `limit` above 20, so large tenants have to be
-// walked page by page. 6 in flight finished Palo Alto's 1,370 jobs in ~23s with no rate limiting.
+// walked page by page.
 const PAGE_SIZE = 20;
 const CONCURRENCY = 6;
+// Workday rate-limits per client IP, not per tenant — and the daily scan runs from a shared GitHub
+// runner IP. With every tenant paging at once (~60 requests in flight) it answered HTTP 429 to
+// all of them for two days running, so total in-flight Workday requests are capped here across
+// every tenant, and a 429 backs off (honoring Retry-After) instead of retrying instantly.
+const workdayLimiter = createLimiter(4);
+const RETRY = { attempts: 6, baseDelayMs: 1500 };
 
 /** Generic adapter for any company on Workday. identifier = `{host}|{siteSlug}`,
  *  e.g. `adobe.wd5.myworkdayjobs.com|external_experienced`. Pages through the whole listing
@@ -27,20 +33,21 @@ export const workdayAdapter: Adapter = {
     const [host, site] = source.identifier.split("|");
     if (!host || !site) throw new Error(`Workday ${source.name}: malformed identifier "${source.identifier}"`);
 
-    const fetchPage = async (offset: number): Promise<WorkdayPage> => {
+    const fetchPage = (offset: number): Promise<WorkdayPage> =>
+      withRetry(() => workdayLimiter(() => requestPage(offset)), RETRY);
+
+    const requestPage = async (offset: number): Promise<WorkdayPage> => {
       const res = await fetch(`https://${host}/wday/cxs/${host.split(".")[0]}/${site}/jobs`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({ appliedFacets: {}, limit: PAGE_SIZE, offset, searchText: query.function }),
       });
-      if (!res.ok) throw new Error(`Workday ${source.name}: HTTP ${res.status}`);
+      assertOk(res, `Workday ${source.name}`);
       return (await res.json()) as WorkdayPage;
     };
 
-    const first = await withRetry(() => fetchPage(0));
-    const rest = await mapLimit(remainingOffsets(first.total ?? 0, PAGE_SIZE), CONCURRENCY, (offset) =>
-      withRetry(() => fetchPage(offset))
-    );
+    const first = await fetchPage(0);
+    const rest = await mapLimit(remainingOffsets(first.total ?? 0, PAGE_SIZE), CONCURRENCY, fetchPage);
 
     return [first, ...rest]
       .flatMap((page) => page.jobPostings)
